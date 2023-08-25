@@ -1,9 +1,9 @@
 @app
 wager-wire-ae36
 
-# @aws
-# region us-east-1
-# profile default
+@aws
+region us-east-1
+profile default
 
 @http
 /*
