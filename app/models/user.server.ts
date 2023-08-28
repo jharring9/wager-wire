@@ -2,7 +2,19 @@ import arc from "@architect/functions";
 import bcrypt from "bcryptjs";
 import invariant from "tiny-invariant";
 
-export type User = { id: `email#${string}`; email: string };
+export type User = {
+  id: `email#${string}`;
+  email: string;
+  name: string;
+  imageUrl: string;
+};
+
+// const user = {
+//   name: "Tom Cook",
+//   email: "tom@example.com",
+//   imageUrl:
+//     "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+// };
 export type Password = { password: string };
 
 export async function getUserById(id: User["id"]): Promise<User | null> {
@@ -13,7 +25,13 @@ export async function getUserById(id: User["id"]): Promise<User | null> {
   });
 
   const [record] = result.Items;
-  if (record) return { id: record.pk, email: record.email };
+  if (record)
+    return {
+      id: record.pk,
+      email: record.email,
+      name: record.name,
+      imageUrl: record.imageUrl,
+    };
   return null;
 }
 

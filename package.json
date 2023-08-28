@@ -24,6 +24,8 @@
   "dependencies": {
     "@architect/architect": "^10.14.0",
     "@architect/functions": "^7.0.0",
+    "@headlessui/react": "^1.7.17",
+    "@heroicons/react": "^2.0.18",
     "@paralleldrive/cuid2": "^2.2.2",
     "@remix-run/architect": "^1.19.3",
     "@remix-run/css-bundle": "^1.19.3",
