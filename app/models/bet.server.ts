@@ -49,8 +49,10 @@ export async function getBetListItems({
   });
 
   return result.Items.map((n: any) => ({
-    title: n.title,
     id: skToId(n.sk),
+    userId: n.userId,
+    gameId: n.gameId,
+    selectedLine: n.selectedLine,
   }));
 }
 

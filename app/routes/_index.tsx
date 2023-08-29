@@ -146,7 +146,7 @@ export default function Index() {
                     {navigation.map((item) => (
                       <Disclosure.Button
                         key={item.name}
-                        as="Link"
+                        as={Link}
                         to={item.href}
                         className={classNames(
                           item.current

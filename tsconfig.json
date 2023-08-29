@@ -9,6 +9,7 @@
     "jsx": "react-jsx",
     "module": "CommonJS",
     "moduleResolution": "node",
+    "noImplicitAny": false,
     "resolveJsonModule": true,
     "target": "ES2019",
     "strict": true,
