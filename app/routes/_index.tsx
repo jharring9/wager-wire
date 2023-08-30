@@ -12,6 +12,7 @@ export const loader = async ({ request }: LoaderArgs) => {
 };
 
 export default function Index() {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const data = useLoaderData<typeof loader>();
   return (
     <main className="-mt-64">
