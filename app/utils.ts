@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import type { User } from "~/models/user.server";
 
 const DEFAULT_REDIRECT = "/";
+const NFL_SEASON_START = new Date("2023-09-05");
 
 /**
  * This should be used any time the redirect path is user-provided
@@ -51,11 +52,7 @@ function isUser(user: any): user is User {
 export function useOptionalUser(): User | undefined {
   const data = useMatchesData("root");
   if (!data || !isUser(data.user)) {
-    return { // TODO -- replace with undefined
-      id: "email#tom@example",
-      email: "tom@example.com",
-      name: "Mason Kinsey",
-    };
+    return undefined;
   }
   return data.user;
 }
@@ -72,4 +69,9 @@ export function useUser(): User {
 
 export function validateEmail(email: unknown): email is string {
   return typeof email === "string" && email.length > 3 && email.includes("@");
+}
+
+export function getNFLWeek(today: Date = new Date()) {
+  const daysSinceStart = (today - NFL_SEASON_START) / 1000 / 60 / 60 / 24;
+  return Math.floor(daysSinceStart / 7) + 1;
 }

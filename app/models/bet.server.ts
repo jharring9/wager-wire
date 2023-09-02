@@ -1,23 +1,21 @@
 import arc from "@architect/functions";
-import { createId } from "@paralleldrive/cuid2";
-
 import type { User } from "~/models/user.server";
 import type { Game } from "~/models/game.server";
 
 export type Bet = {
-  id: ReturnType<typeof createId>;
   userId: User["id"];
+  week: string;
   gameId: Game["id"];
-  selectedLine: string;
+  selectedTeam: string;
 };
 
 type BetItem = {
   pk: User["id"];
-  sk: `bet#${Bet["id"]}`;
+  sk: `bet#${Bet["week"]}`;
 };
 
-const skToId = (sk: BetItem["sk"]): Bet["id"] => sk.replace(/^bet#/, "");
-const idToSk = (id: Bet["id"]): BetItem["sk"] => `bet#${id}`;
+const skToWeek = (sk: BetItem["sk"]): Bet["week"] => sk.replace(/^bet#/, "");
+const weekToSk = (id: Bet["week"]): BetItem["sk"] => `bet#${id}`;
 
 export async function getBet({
   id,
@@ -25,14 +23,14 @@ export async function getBet({
 }: Pick<Bet, "id" | "userId">): Promise<Bet | null> {
   const db = await arc.tables();
 
-  const result = await db.bet.get({ pk: userId, sk: idToSk(id) });
+  const result = await db.bet.get({ pk: userId, sk: weekToSk(id) });
 
   if (result) {
     return {
       userId: result.pk,
-      id: result.sk,
+      week: skToWeek(result.sk),
       gameId: result.gameId,
-      selectedLine: result.selectedLine,
+      selectedTeam: result.selectedTeam,
     };
   }
   return null;
@@ -49,36 +47,40 @@ export async function getBetListItems({
   });
 
   return result.Items.map((n: any) => ({
-    id: skToId(n.sk),
-    userId: n.userId,
+    userId: n.pk,
+    week: skToWeek(n.sk),
     gameId: n.gameId,
-    selectedLine: n.selectedLine,
+    selectedTeam: n.selectedTeam,
   }));
 }
 
 export async function createBet({
   gameId,
-  selectedLine,
+  selectedTeam,
   userId,
-}: Pick<Bet, "gameId" | "selectedLine" | "userId">): Promise<Bet> {
+  week,
+}: Bet): Promise<Bet> {
   const db = await arc.tables();
 
   const result = await db.bet.put({
     pk: userId,
-    sk: idToSk(createId()),
+    sk: weekToSk(week),
     gameId: gameId,
-    selectedLine: selectedLine,
+    selectedTeam: selectedTeam,
   });
 
   return {
-    id: skToId(result.sk),
     userId: result.pk,
+    week: skToWeek(result.sk),
     gameId: result.gameId,
-    selectedLine: result.selectedLine,
+    selectedTeam: result.selectedTeam,
   };
 }
 
-export async function deleteBet({ id, userId }: Pick<Bet, "id" | "userId">) {
+export async function deleteBet({
+  userId,
+  week,
+}: Pick<Bet, "userId" | "week">) {
   const db = await arc.tables();
-  return db.bet.delete({ pk: userId, sk: idToSk(id) });
+  return db.bet.delete({ pk: userId, sk: weekToSk(week) });
 }

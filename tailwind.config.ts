@@ -5,5 +5,5 @@ export default {
   theme: {
     extend: {},
   },
-  plugins: [],
+  plugins: [require("@tailwindcss/forms"), "prettier-plugin-tailwindcss"],
 } satisfies Config;

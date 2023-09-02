@@ -25,15 +25,9 @@ note
   sk **String # noteId
 
 game
-  id *String
+  week *String
+  id **String
 
 bet
   pk *String  # userId
   sk **String # betId
-
-current
-  id *String
-
-@sandbox
-env production
-useAws true
