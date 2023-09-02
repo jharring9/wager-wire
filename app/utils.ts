@@ -72,6 +72,7 @@ export function validateEmail(email: unknown): email is string {
 }
 
 export function getNFLWeek(today: Date = new Date()) {
-  const daysSinceStart = (today - NFL_SEASON_START) / 1000 / 60 / 60 / 24;
+  const daysSinceStart =
+    (today.valueOf() - NFL_SEASON_START.valueOf()) / 1000 / 60 / 60 / 24;
   return Math.floor(daysSinceStart / 7) + 1;
 }

@@ -18,12 +18,12 @@ const skToWeek = (sk: BetItem["sk"]): Bet["week"] => sk.replace(/^bet#/, "");
 const weekToSk = (id: Bet["week"]): BetItem["sk"] => `bet#${id}`;
 
 export async function getBet({
-  id,
+  week,
   userId,
-}: Pick<Bet, "id" | "userId">): Promise<Bet | null> {
+}: Pick<Bet, "week" | "userId">): Promise<Bet | null> {
   const db = await arc.tables();
 
-  const result = await db.bet.get({ pk: userId, sk: weekToSk(id) });
+  const result = await db.bet.get({ pk: userId, sk: weekToSk(week) });
 
   if (result) {
     return {
