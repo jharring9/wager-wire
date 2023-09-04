@@ -5,6 +5,14 @@ wager-wire-ae36
 region us-east-1
 profile default
 
+@scheduled
+line-grabber
+  src scheduled/line-grabber
+  cron 0 0 * * 2 *
+scorer
+  src scheduled/scorer
+  cron 0 0 * * 2 *
+
 @http
 /*
   method any

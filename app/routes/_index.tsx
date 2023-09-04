@@ -1,4 +1,4 @@
-import type { V2_MetaFunction, ActionArgs } from "@remix-run/node";
+import type { V2_MetaFunction, ActionArgs, LoaderArgs } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import type { Game } from "~/models/game.server";
 import { getCurrentGames } from "~/models/game.server";
@@ -13,7 +13,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { requireUserId } from "~/session.server";
-import { createBet } from "~/models/bet.server";
+import { createBet, getUserBetByWeek } from "~/models/bet.server";
 import { getNFLWeek, useOptionalUser } from "~/utils";
 import { UserCircleIcon } from "@heroicons/react/24/solid";
 
@@ -23,14 +23,25 @@ const navigation = [
   { name: "Standings", href: "standings", current: false },
 ];
 
-// TODO -- info alert if bet has already been placed this week
-// TODO -- OR, display yellow alert if week is locked, don't allow submission
+// TODO -- popup if bet has already been placed this week
+// TODO -- OR, display popup if week is locked, don't allow submission
+// TODO -- if bet has been placed this week, warn on submit
 
 export const meta: V2_MetaFunction = () => [{ title: "Wager Wire" }];
 
-export const loader = async () => {
+export const loader = async ({ request }: LoaderArgs) => {
   const currentGames = await getCurrentGames();
-  return json(currentGames);
+  const userId = await requireUserId(request);
+
+  const currentBet = await getUserBetByWeek({
+    userId: userId,
+    week: getNFLWeek().toString(),
+  });
+
+  const dayOfWeek = new Date().getDay();
+  const bettingOpen = dayOfWeek >= 2 && dayOfWeek <= 4;
+
+  return json({ currentGames, currentBet, bettingOpen });
 };
 
 export const classNames = (...classes) => {
@@ -69,10 +80,11 @@ export const action = async ({ request }: ActionArgs) => {
 };
 
 export default function Index() {
+  const { currentGames, currentBet, bettingOpen } =
+    useLoaderData<typeof loader>();
   const [searchParams] = useSearchParams();
   const alertText = searchParams.get("alert");
   const user = useOptionalUser();
-  const data = useLoaderData<typeof loader>();
 
   return (
     <div className="min-h-full">
@@ -254,6 +266,8 @@ export default function Index() {
       </div>
       <main className="-mt-64">
         <Alert text={alertText} />
+        {!bettingOpen && <Alert text="Betting is closed." />}
+        {currentBet && <Alert text="You already have a bet this week." />}
         <header className="py-10">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <h1 className="text-3xl font-bold tracking-tight text-white">
@@ -264,7 +278,7 @@ export default function Index() {
         <div className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
           {/* Page-specific content below */}
           <ul className="divide-y divide-gray-100 overflow-hidden bg-white shadow-sm ring-1 ring-gray-900/5 rounded-lg sm:rounded-xl">
-            {data.map((game) => (
+            {currentGames.map((game) => (
               <GameSelectModal game={game} key={game.id} />
             ))}
           </ul>

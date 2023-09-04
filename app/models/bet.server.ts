@@ -36,6 +36,18 @@ export async function getBet({
   return null;
 }
 
+export async function getUserBetByWeek({
+  userId,
+  week,
+}: Pick<Bet, "userId" | "week">): Promise<Array<Bet>> {
+  const db = await arc.tables();
+
+  return await db.bet.get({
+    pk: userId,
+    sk: weekToSk(week)
+  })
+}
+
 export async function getBetListItems({
   userId,
 }: Pick<Bet, "userId">): Promise<Array<Bet>> {
@@ -46,11 +58,11 @@ export async function getBetListItems({
     ExpressionAttributeValues: { ":pk": userId },
   });
 
-  return result.Items.map((n: any) => ({
-    userId: n.pk,
-    week: skToWeek(n.sk),
-    gameId: n.gameId,
-    selectedTeam: n.selectedTeam,
+  return result.Items.map((result) => ({
+    userId: result.pk,
+    week: skToWeek(result.sk),
+    gameId: result.gameId,
+    selectedTeam: result.selectedTeam,
   }));
 }
 
