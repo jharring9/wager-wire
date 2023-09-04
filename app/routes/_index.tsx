@@ -2,28 +2,20 @@ import type { V2_MetaFunction, ActionArgs, LoaderArgs } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import type { Game } from "~/models/game.server";
 import { getCurrentGames } from "~/models/game.server";
-import { Form, Link, useLoaderData, useSearchParams } from "@remix-run/react";
+import { Form, useLoaderData, useSearchParams } from "@remix-run/react";
 import { Fragment, useRef, useState } from "react";
-import { Dialog, Disclosure, Menu, Transition } from "@headlessui/react";
-import { CheckCircleIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
+import { Dialog, Transition } from "@headlessui/react";
 import {
-  Bars3Icon,
-  CheckIcon,
-  UserIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/outline";
+  CheckCircleIcon,
+  ChevronRightIcon,
+  ExclamationTriangleIcon,
+  LockClosedIcon,
+} from "@heroicons/react/20/solid";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import { requireUserId } from "~/session.server";
 import { createBet, getUserBetByWeek } from "~/models/bet.server";
-import { getNFLWeek, useOptionalUser } from "~/utils";
-import { UserCircleIcon } from "@heroicons/react/24/solid";
+import { getNFLWeek } from "~/utils";
 
-const navigation = [
-  { name: "Dashboard", href: "/", current: true },
-  { name: "Your Bets", href: "bets", current: false },
-  { name: "Standings", href: "standings", current: false },
-];
-
-// TODO -- popup if bet has already been placed this week
 // TODO -- OR, display popup if week is locked, don't allow submission
 // TODO -- if bet has been placed this week, warn on submit
 
@@ -84,197 +76,31 @@ export default function Index() {
     useLoaderData<typeof loader>();
   const [searchParams] = useSearchParams();
   const alertText = searchParams.get("alert");
-  const user = useOptionalUser();
 
   return (
     <div className="min-h-full">
-      <div className="bg-gray-800 pb-32">
-        <Disclosure as="nav" className="bg-gray-800">
-          {({ open }) => (
-            <>
-              <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                <div className="border-b border-gray-700">
-                  <div className="flex h-16 items-center justify-between px-4 sm:px-0">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0">
-                        <img
-                          className="h-8 w-8"
-                          src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500"
-                          alt="Wager Wire"
-                        />
-                      </div>
-                      <div className="hidden md:block">
-                        <div className="ml-10 flex items-baseline space-x-4">
-                          {navigation.map((item) => (
-                            <Link
-                              key={item.name}
-                              to={item.href}
-                              className={classNames(
-                                item.current
-                                  ? "bg-gray-900 text-white"
-                                  : "text-gray-300 hover:bg-gray-700 hover:text-white",
-                                "rounded-md px-3 py-2 text-sm font-medium",
-                              )}
-                              aria-current={item.current ? "page" : undefined}
-                            >
-                              {item.name}
-                            </Link>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="hidden md:block">
-                      <div className="ml-4 flex items-center md:ml-6">
-                        {user ? (
-                          <Menu as="div" className="relative ml-3">
-                            <div>
-                              <Menu.Button className="relative flex max-w-xs items-center rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 text-gray-400 hover:text-white">
-                                <span className="absolute -inset-1.5" />
-                                <span className="sr-only">Open user menu</span>
-                                <UserCircleIcon className="h-8 w-8" />
-                              </Menu.Button>
-                            </div>
-                            <Transition
-                              as={Fragment}
-                              enter="transition ease-out duration-100"
-                              enterFrom="transform opacity-0 scale-95"
-                              enterTo="transform opacity-100 scale-100"
-                              leave="transition ease-in duration-75"
-                              leaveFrom="transform opacity-100 scale-100"
-                              leaveTo="transform opacity-0 scale-95"
-                            >
-                              <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                <Menu.Item key="profile">
-                                  {({ active }) => (
-                                    <Link
-                                      to="/bets"
-                                      className={classNames(
-                                        active ? "bg-gray-100" : "",
-                                        "block px-4 py-2 text-sm text-gray-700",
-                                      )}
-                                    >
-                                      Your Bets
-                                    </Link>
-                                  )}
-                                </Menu.Item>
-                                <Menu.Item key="logout">
-                                  {({ active }) => (
-                                    <Form
-                                      action="/logout"
-                                      method="post"
-                                      className="w-full"
-                                    >
-                                      <button
-                                        type="submit"
-                                        className={classNames(
-                                          active ? "bg-gray-100" : "",
-                                          "text-left px-4 py-2 text-sm text-gray-700 w-full",
-                                        )}
-                                      >
-                                        Logout
-                                      </button>
-                                    </Form>
-                                  )}
-                                </Menu.Item>
-                              </Menu.Items>
-                            </Transition>
-                          </Menu>
-                        ) : (
-                          <div className="relative ml-3">
-                            <Link
-                              to="/login"
-                              className="text-gray-300 hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium"
-                            >
-                              Login
-                            </Link>
-                          </div>
-                        )}
-
-                        {/* Profile dropdown */}
-                      </div>
-                    </div>
-                    <div className="-mr-2 flex md:hidden">
-                      {/* Mobile menu button */}
-                      <Disclosure.Button className="relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
-                        <span className="absolute -inset-0.5" />
-                        <span className="sr-only">Open main menu</span>
-                        {open ? (
-                          <XMarkIcon
-                            className="block h-6 w-6"
-                            aria-hidden="true"
-                          />
-                        ) : (
-                          <Bars3Icon
-                            className="block h-6 w-6"
-                            aria-hidden="true"
-                          />
-                        )}
-                      </Disclosure.Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <Disclosure.Panel className="border-b border-gray-700 md:hidden">
-                <div className="space-y-1 px-2 py-3 sm:px-3">
-                  {navigation.map((item) => (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      className={classNames(
-                        item.current
-                          ? "bg-gray-900 text-white"
-                          : "text-gray-300 hover:bg-gray-700 hover:text-white",
-                        "block rounded-md px-3 py-2 text-base font-medium",
-                      )}
-                      aria-current={item.current ? "page" : undefined}
-                    >
-                      {item.name}
-                    </Link>
-                  ))}
-                </div>
-                <div className="border-t border-gray-700 pb-3 pt-4">
-                  <div className="flex items-center px-5">
-                    <div className="flex-shrink-0">
-                      <UserIcon className="h-6 w-6 text-gray-400" />
-                    </div>
-                    <div className="ml-3">
-                      <div className="text-base font-medium leading-none text-white">
-                        {user?.name}
-                      </div>
-                      <div className="text-sm font-medium leading-none text-gray-400">
-                        {user?.email}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-3 space-y-1 px-2">
-                    <Form action="/logout" method="post" className="w-full">
-                      <button
-                        type="submit"
-                        className="block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
-                      >
-                        Logout
-                      </button>
-                    </Form>
-                  </div>
-                </div>
-              </Disclosure.Panel>
-            </>
-          )}
-        </Disclosure>
-        <div className="py-16"></div>
-      </div>
-      <main className="-mt-64">
+      <header className="bg-white shadow">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+            Dashboard
+          </h1>
+        </div>
+      </header>
+      <main className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
         <Alert text={alertText} />
-        {!bettingOpen && <Alert text="Betting is closed." />}
-        {currentBet && <Alert text="You already have a bet this week." />}
-        <header className="py-10">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <h1 className="text-3xl font-bold tracking-tight text-white">
-              This Week's Bets
-            </h1>
-          </div>
-        </header>
+        {!bettingOpen && (
+          <Alert
+            warn
+            text="Betting is closed for the week. You may not place any bets at this point."
+          />
+        )}
+        {bettingOpen && currentBet && (
+          <Alert
+            warn
+            text="You have already placed your bet this week. Making another submission will override your current bet."
+          />
+        )}
+
         <div className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
           {/* Page-specific content below */}
           <ul className="divide-y divide-gray-100 overflow-hidden bg-white shadow-sm ring-1 ring-gray-900/5 rounded-lg sm:rounded-xl">
@@ -288,32 +114,52 @@ export default function Index() {
   );
 }
 
-const Alert = ({ text }) => {
+const Alert = ({ text, warn = false }) => {
   const [show, setShow] = useState(true);
 
   return (
     <div
       className={classNames(
         show && text
-          ? "rounded-md bg-green-50 p-4 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
+          ? "rounded-md p-4 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mb-4"
           : "hidden",
+        warn ? "bg-yellow-50" : "bg-green-50",
       )}
     >
       <div className="flex">
         <div className="flex-shrink-0">
-          <CheckCircleIcon
-            className="h-5 w-5 text-green-400"
-            aria-hidden="true"
-          />
+          {warn ? (
+            <ExclamationTriangleIcon
+              className="text-yellow-400 h-5 w-5"
+              aria-hidden="true"
+            />
+          ) : (
+            <CheckCircleIcon
+              className="text-green-400 h-5 w-5"
+              aria-hidden="true"
+            />
+          )}
         </div>
         <div className="ml-3">
-          <p className="text-sm font-medium text-green-800">{text}</p>
+          <p
+            className={classNames(
+              warn ? "text-yellow-800" : "text-green-800",
+              "text-sm font-medium",
+            )}
+          >
+            {text}
+          </p>
         </div>
         <div className="ml-auto pl-3">
           <div className="-mx-1.5 -my-1.5">
             <button
               onClick={() => setShow(false)}
-              className="inline-flex rounded-md bg-green-50 p-1.5 text-green-500 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2 focus:ring-offset-green-50"
+              className={classNames(
+                warn
+                  ? "bg-yellow-50 text-yellow-500 hover:bg-yellow-100 focus:ring-yellow-600 focus:ring-offset-yellow-50"
+                  : "bg-green-50 text-green-500 hover:bg-green-100 focus:ring-green-600 focus:ring-offset-green-50",
+                "inline-flex rounded-md  p-1.5 focus:outline-none focus:ring-2 focus:ring-offset-2",
+              )}
             >
               <XMarkIcon className="h-5 w-5" aria-hidden="true" />
             </button>
@@ -409,16 +255,16 @@ const GameSelectModal: React.FC<{ game: Game }> = ({ game }) => {
               >
                 <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-3xl sm:p-6">
                   <div>
-                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-                      <CheckIcon
-                        className="h-6 w-6 text-green-600"
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center">
+                      <LockClosedIcon
+                        className="h-10 w-10 text-gray-700"
                         aria-hidden="true"
                       />
                     </div>
-                    <div className="mt-3 text-center sm:mt-5">
+                    <div className="text-center">
                       <Dialog.Title
                         as="h3"
-                        className="text-base font-semibold leading-6 text-gray-900"
+                        className="text-lg font-bold leading-6 text-gray-900"
                       >
                         Make Your Pick
                       </Dialog.Title>
@@ -444,7 +290,7 @@ const GameSelectModal: React.FC<{ game: Game }> = ({ game }) => {
                                 <span
                                   className={classNames(
                                     game.team1Spread < game.team2Spread
-                                      ? "bg-green-50 text-green-700 ring-red-600/20"
+                                      ? "bg-green-50 text-green-700 ring-green-600/20"
                                       : "bg-red-50 text-red-700 ring-red-600/20",
                                     "inline-flex flex-shrink-0 items-center rounded-full px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset",
                                   )}
@@ -454,7 +300,7 @@ const GameSelectModal: React.FC<{ game: Game }> = ({ game }) => {
                                 </span>
                               </div>
                               <p className="mt-1 truncate text-sm text-gray-500 text-left">
-                                More team data
+                                More team data coming...
                               </p>
                             </div>
                             <img
@@ -483,7 +329,7 @@ const GameSelectModal: React.FC<{ game: Game }> = ({ game }) => {
                                 <span
                                   className={classNames(
                                     game.team2Spread < game.team1Spread
-                                      ? "bg-green-50 text-green-700 ring-red-600/20"
+                                      ? "bg-green-50 text-green-700 ring-green-600/20"
                                       : "bg-red-50 text-red-700 ring-red-600/20",
                                     "inline-flex flex-shrink-0 items-center rounded-full px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset",
                                   )}
@@ -493,7 +339,7 @@ const GameSelectModal: React.FC<{ game: Game }> = ({ game }) => {
                                 </span>
                               </div>
                               <p className="mt-1 truncate text-sm text-gray-500 text-left">
-                                More team data
+                                More team data coming...
                               </p>
                             </div>
                             <img

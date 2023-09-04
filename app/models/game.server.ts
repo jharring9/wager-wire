@@ -11,7 +11,7 @@ export type Game = {
   team1Url: string;
   team2Url: string;
   date: string;
-  //TODO -- add result -- 1 or 2
+  winner: number;
 };
 
 export async function getCurrentGames(): Promise<Array<Game>> {

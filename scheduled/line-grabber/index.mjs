@@ -1,4 +1,5 @@
 import arc from "@architect/functions";
+import fetch from "node-fetch";
 
 async function fetchGameLinesFromVegasAPI() {
   const response = await fetch(
@@ -7,7 +8,7 @@ async function fetchGameLinesFromVegasAPI() {
   const data = await response.json();
   const db = await arc.tables();
 
-  data.map(async (game) => {
+  for (const game of data) {
     const thisGame = {
       id: game.id,
       week: getNFLWeek(new Date(game.commence_time)).toString(),
@@ -27,8 +28,7 @@ async function fetchGameLinesFromVegasAPI() {
     }
 
     await db.game.put(thisGame);
-    return thisGame;
-  });
+  }
 }
 
 export async function handler() {

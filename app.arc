@@ -8,10 +8,10 @@ profile default
 @scheduled
 line-grabber
   src scheduled/line-grabber
-  cron 0 0 * * 2 *
+  cron 0 0 ? * TUE *
 scorer
   src scheduled/scorer
-  cron 0 0 * * 2 *
+  cron 0 0 ? * TUE *
 
 @http
 /*
