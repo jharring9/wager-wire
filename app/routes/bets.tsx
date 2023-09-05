@@ -4,7 +4,7 @@ import {
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import { classNames } from "~/root";
-import { useLocation } from "react-router";
+import { useLocation } from "react-router-dom";
 import { isRouteErrorResponse, Outlet, useRouteError } from "@remix-run/react";
 import type { LoaderArgs } from "@remix-run/node";
 import { requireUserId } from "~/session.server";
