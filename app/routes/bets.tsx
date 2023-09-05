@@ -5,13 +5,13 @@ import {
 } from "@heroicons/react/24/outline";
 import { classNames } from "~/root";
 import { useLocation } from "react-router";
-import { Outlet } from "@remix-run/react";
+import { isRouteErrorResponse, Outlet, useRouteError } from "@remix-run/react";
 import type { LoaderArgs } from "@remix-run/node";
 import { requireUserId } from "~/session.server";
 
 export const loader = async ({ request }: LoaderArgs) => {
   await requireUserId(request);
-  return null;
+  return null; // TODO -- problem?
 };
 
 const secondaryNavigation = [
@@ -66,3 +66,42 @@ export default function Bets() {
     </div>
   );
 }
+
+export function ErrorBoundary() {
+  const error = useRouteError();
+
+  if (error instanceof Error) {
+    return <ErrorComponent errorText={error.message} />;
+  }
+
+  if (!isRouteErrorResponse(error)) {
+    return <ErrorComponent errorText="Unknown Error" />;
+  }
+
+  if (error.status === 404) {
+    return <ErrorComponent errorText="Page not found" />;
+  }
+
+  return (
+    <ErrorComponent
+      errorText={`An unexpected error occurred: ${error.statusText}`}
+    />
+  );
+}
+
+const ErrorComponent = ({ errorText }) => {
+  return (
+    <div className="grid min-h-full place-items-center bg-white px-6 py-24 sm:py-32 lg:px-8">
+      <div className="text-center">
+        <p className="text-base font-semibold text-indigo-600">404</p>
+        <h1 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl">
+          Error
+        </h1>
+        <p className="mt-6 text-base leading-7 text-gray-600">
+          We encountered an error while loading this page. Please try again.
+        </p>
+        <p className="mt-6 text-xs leading-7 text-gray-600">{errorText}</p>
+      </div>
+    </div>
+  );
+};
