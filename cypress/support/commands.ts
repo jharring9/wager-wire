@@ -31,11 +31,13 @@ declare global {
 
 function login({
   email = faker.internet.email(undefined, undefined, "example.com"),
+  name = faker.internet.displayName(),
 }: {
   email?: string;
+  name?: string;
 } = {}) {
   cy.then(() => ({ email })).as("user");
-  cy.request("POST", "/__tests/create-user", { email });
+  cy.request("POST", "/__tests/create-user", { name, email });
   return cy.get("@user");
 }
 

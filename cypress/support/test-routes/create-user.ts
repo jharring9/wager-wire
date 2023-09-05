@@ -15,7 +15,7 @@ export const action = async ({ request }: ActionArgs) => {
     return redirect("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
   }
 
-  const { email } = await request.json();
+  const { name, email } = await request.json();
   if (!email) {
     throw new Error("email required for login");
   }
@@ -23,7 +23,7 @@ export const action = async ({ request }: ActionArgs) => {
     throw new Error("All test emails must end in @example.com");
   }
 
-  const user = await createUser(email, "myreallystrongpassword");
+  const user = await createUser(name, email, "myreallystrongpassword");
 
   return createUserSession({
     redirectTo: "/",
