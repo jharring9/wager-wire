@@ -45,6 +45,7 @@ async function getUserPasswordByEmail(email: User["email"]) {
 }
 
 export async function createUser(
+  name: User["name"],
   email: User["email"],
   password: Password["password"],
 ) {
@@ -57,6 +58,7 @@ export async function createUser(
 
   await db.user.put({
     pk: `email#${email}`,
+    name,
     email,
   });
 

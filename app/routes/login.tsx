@@ -6,7 +6,7 @@ import { verifyLogin } from "~/models/user.server";
 import { createUserSession, getUserId } from "~/session.server";
 import { safeRedirect, validateEmail } from "~/utils";
 import { ExclamationCircleIcon, XCircleIcon } from "@heroicons/react/20/solid";
-import { classNames } from "~/routes/_index";
+import { classNames } from "~/root";
 
 export const loader = async ({ request }: LoaderArgs) => {
   const userId = await getUserId(request);

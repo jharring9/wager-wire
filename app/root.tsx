@@ -12,13 +12,12 @@ import {
   ScrollRestoration,
 } from "@remix-run/react";
 
-import { Fragment } from "react";
+import React, { Fragment } from "react";
 import { Disclosure, Menu, Transition } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 
 import { getUser } from "~/session.server";
 import stylesheet from "~/tailwind.css";
-import { classNames } from "~/routes/_index";
 import { useOptionalUser } from "~/utils";
 import { UserIcon } from "@heroicons/react/24/solid";
 
@@ -29,14 +28,18 @@ export const links: LinksFunction = () => [
   { rel: "icon", href: "/_static/favicon.ico" },
 ];
 
+export const classNames = (...classes) => {
+  return classes.filter(Boolean).join(" ");
+};
+
 export const loader = async ({ request }: LoaderArgs) => {
   return json({ user: await getUser(request) });
 };
 
 const navigation = [
-  { name: "Dashboard", href: "/", current: false },
+  { name: "Home", href: "/", current: false },
   { name: "Wager", href: "wager", current: false },
-  { name: "Standings", href: "standings", current: false },
+  { name: "Standings", href: "/bets/standings", current: false },
 ];
 
 export default function App() {
@@ -84,8 +87,8 @@ export default function App() {
                         </div>
                       </div>
                     </div>
-                    {user ? (
-                      <div className="hidden md:block">
+                    <div className="hidden md:block">
+                      {user ? (
                         <div className="ml-4 flex items-center md:ml-6">
                           {/* Profile dropdown */}
                           <Menu as="div" className="relative ml-3">
@@ -142,15 +145,15 @@ export default function App() {
                             </Transition>
                           </Menu>
                         </div>
-                      </div>
-                    ) : (
-                      <Link
-                        to="/login"
-                        className="text-gray-300 hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium bg-gray-900 text-white"
-                      >
-                        Login
-                      </Link>
-                    )}
+                      ) : (
+                        <Link
+                          to="/login"
+                          className="text-gray-300 hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium bg-gray-900 text-white"
+                        >
+                          Login
+                        </Link>
+                      )}
+                    </div>
                     <div className="-mr-2 flex md:hidden">
                       {/* Mobile menu button */}
                       <Disclosure.Button className="relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
