@@ -4,18 +4,17 @@ import {
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import { classNames } from "~/root";
-import { useLocation } from "react-router-dom";
-import { isRouteErrorResponse, Outlet, useRouteError } from "@remix-run/react";
+import { isRouteErrorResponse, Outlet, useMatches, useRouteError } from "@remix-run/react";
 import type { LoaderArgs } from "@remix-run/node";
 import { requireUserId } from "~/session.server";
 
 export const loader = async ({ request }: LoaderArgs) => {
   await requireUserId(request);
-  return null; // TODO -- problem?
+  return null;
 };
 
 const secondaryNavigation = [
-  { name: "Your Bets", href: "/bets", icon: UserCircleIcon },
+  { name: "Your Bets", href: "/bets/", icon: UserCircleIcon },
   {
     name: "This Week's Bets",
     href: "/bets/week",
@@ -25,7 +24,8 @@ const secondaryNavigation = [
 ];
 
 export default function Bets() {
-  const location = useLocation();
+  const matches = useMatches();
+  const location = matches[matches.length - 1].pathname;
 
   return (
     <div className="mx-auto max-w-7xl lg:flex lg:gap-x-16 lg:px-8">
@@ -37,7 +37,7 @@ export default function Bets() {
                 <a
                   href={item.href}
                   className={classNames(
-                    location.pathname === item.href
+                    location === item.href
                       ? "bg-gray-50 text-indigo-600"
                       : "text-gray-700 hover:text-indigo-600 hover:bg-gray-50",
                     "group flex gap-x-3 rounded-md py-2 pl-2 pr-3 text-sm leading-6 font-semibold",
@@ -45,7 +45,7 @@ export default function Bets() {
                 >
                   <item.icon
                     className={classNames(
-                      location.pathname === item.href
+                      location === item.href
                         ? "text-indigo-600"
                         : "text-gray-400 group-hover:text-indigo-600",
                       "h-6 w-6 shrink-0",
