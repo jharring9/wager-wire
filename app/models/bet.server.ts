@@ -5,8 +5,13 @@ import type { Game } from "~/models/game.server";
 export type Bet = {
   userId: User["id"];
   week: string;
+  betSlip: BetSlipItem[];
+};
+
+export type BetSlipItem = {
   gameId: Game["id"];
-  selectedTeam: string;
+  teamId: number;
+  units: number;
 };
 
 type BetItem = {
@@ -29,8 +34,7 @@ export async function getBet({
     return {
       userId: result.pk,
       week: skToWeek(result.sk),
-      gameId: result.gameId,
-      selectedTeam: result.selectedTeam,
+      betSlip: result.betSlip,
     };
   }
   return null;
@@ -44,8 +48,8 @@ export async function getUserBetByWeek({
 
   return await db.bet.get({
     pk: userId,
-    sk: weekToSk(week)
-  })
+    sk: weekToSk(week),
+  });
 }
 
 export async function getBetListItems({
@@ -61,31 +65,23 @@ export async function getBetListItems({
   return result.Items.map((result) => ({
     userId: result.pk,
     week: skToWeek(result.sk),
-    gameId: result.gameId,
-    selectedTeam: result.selectedTeam,
+    betSlip: result.betSlip,
   }));
 }
 
-export async function createBet({
-  gameId,
-  selectedTeam,
-  userId,
-  week,
-}: Bet): Promise<Bet> {
+export async function createBet({ userId, week, betSlip }: Bet): Promise<Bet> {
   const db = await arc.tables();
 
   const result = await db.bet.put({
     pk: userId,
     sk: weekToSk(week),
-    gameId: gameId,
-    selectedTeam: selectedTeam,
+    betSlip: betSlip,
   });
 
   return {
     userId: result.pk,
     week: skToWeek(result.sk),
-    gameId: result.gameId,
-    selectedTeam: result.selectedTeam,
+    betSlip: result.betSlip,
   };
 }
 

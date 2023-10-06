@@ -1,10 +1,10 @@
-import type { V2_MetaFunction, ActionArgs, LoaderArgs } from "@remix-run/node";
-import { json, redirect } from "@remix-run/node";
+import type { V2_MetaFunction, LoaderArgs } from "@remix-run/node";
+import { json } from "@remix-run/node";
 import type { Game } from "~/models/game.server";
 import { getCurrentGames } from "~/models/game.server";
 import { Form, useLoaderData, useSearchParams } from "@remix-run/react";
 import { Fragment, useRef, useState } from "react";
-import { Dialog, Transition } from "@headlessui/react";
+import { Dialog, Popover, Transition } from "@headlessui/react";
 import {
   CheckCircleIcon,
   ChevronRightIcon,
@@ -13,7 +13,7 @@ import {
 } from "@heroicons/react/20/solid";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { requireUserId } from "~/session.server";
-import { createBet, getUserBetByWeek } from "~/models/bet.server";
+import { getUserBetByWeek } from "~/models/bet.server";
 import { getNFLWeek } from "~/utils";
 import { classNames } from "~/root";
 
@@ -30,56 +30,36 @@ export const loader = async ({ request }: LoaderArgs) => {
     week: getNFLWeek().toString(),
   });
 
-  const dayOfWeek = new Date().getDay();
-  const bettingOpen = dayOfWeek >= 2 && dayOfWeek <= 4;
+  // const dayOfWeek = new Date().getDay();
+  //TODO
+  // const bettingOpen = dayOfWeek >= 2 && dayOfWeek <= 4;
+  const bettingOpen = true;
 
   return json({ currentGames, currentBet, bettingOpen });
 };
-
-export const action = async ({ request }: ActionArgs) => {
-  const userId = await requireUserId(request);
-
-  const formData = await request.formData();
-  const gameId = formData.get("gameId");
-  const teamId = formData.get("teamId");
-
-  if (typeof gameId !== "string" || gameId.length === 0) {
-    return json(
-      { errors: { body: null, title: "Game ID is required" } },
-      { status: 400 },
-    );
-  }
-
-  if (teamId !== "1" && teamId !== "2") {
-    return json(
-      { errors: { body: "Team selection is required", title: null } },
-      { status: 400 },
-    );
-  }
-
-  const result = await createBet({
-    gameId: gameId,
-    selectedTeam: teamId,
-    userId: userId,
-    week: getNFLWeek().toString(),
-  });
-
-  return redirect(`/bets/${result.week}`);
-};
-
 export default function PlaceWager() {
+  const [slip, setSlip] = useState<string[]>([]);
   const { currentGames, currentBet, bettingOpen } =
     useLoaderData<typeof loader>();
   const [searchParams] = useSearchParams();
   const alertText = searchParams.get("alert");
 
+  const addGameToSlip = (game) => {
+    setSlip([...slip, game]);
+  };
+
   return (
     <div className="min-h-full">
       <header className="bg-white shadow">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-            Week {getNFLWeek()} Games
-          </h1>
+          <div className="sm:flex sm:items-center sm:justify-between">
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+              Week {getNFLWeek()} Games
+            </h1>
+            <div className="mt-3 sm:ml-4 sm:mt-0">
+              {slip && slip.length > 0 && <Cart cart={slip} />}
+            </div>
+          </div>
         </div>
       </header>
       <main className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
@@ -93,7 +73,7 @@ export default function PlaceWager() {
         {bettingOpen && currentBet && (
           <Alert
             warn
-            text="You have already placed your bet this week. Making another submission will override your current bet."
+            text="You have already submitted your slate this week. Making another submission will override your current slate."
           />
         )}
 
@@ -104,7 +84,8 @@ export default function PlaceWager() {
               <GameSelectModal
                 game={game}
                 key={game.id}
-                allowed={bettingOpen}
+                allowed={true}
+                addGameToSlip={addGameToSlip}
               />
             ))}
           </ul>
@@ -114,7 +95,7 @@ export default function PlaceWager() {
   );
 }
 
-const Alert = ({ text, warn = false }) => {
+export const Alert = ({ text, warn = false }) => {
   const [show, setShow] = useState(true);
 
   return (
@@ -170,10 +151,11 @@ const Alert = ({ text, warn = false }) => {
   );
 };
 
-const GameSelectModal: React.FC<{ game: Game; allowed: boolean }> = ({
-  game,
-  allowed,
-}) => {
+const GameSelectModal: React.FC<{
+  game: Game;
+  allowed: boolean;
+  addGameToSlip: Function;
+}> = ({ game, allowed, addGameToSlip }) => {
   const [open, setOpen] = useState(false);
   const [team, setTeam] = useState(0);
   const cancelButtonRef = useRef(null);
@@ -187,13 +169,26 @@ const GameSelectModal: React.FC<{ game: Game; allowed: boolean }> = ({
     if (allowed) setOpen(true);
   };
 
+  const submitForm = () => {
+    closeModal();
+    if (team === 0) return;
+    addGameToSlip({
+      gameId: game.id,
+      teamId: team,
+      name: team === 1 ? game.team1 : game.team2,
+      spread: team === 1 ? game.team1Spread : game.team2Spread,
+      imageSrc: team === 1 ? game.team1Url : game.team2Url,
+      units: 0,
+    });
+  };
+
   return (
     <>
       <li
         key={game.id}
         className={classNames(
-          allowed ? "hover:bg-gray-50 hover:bg-gray-200" : "",
-          "relative flex justify-between gap-x-6 px-4 py-5 sm:px-6 cursor-pointer",
+          allowed ? "hover:bg-gray-50 hover:bg-gray-200 cursor-pointer" : "",
+          "flex justify-between gap-x-6 px-4 py-5 sm:px-6",
         )}
         onClick={openModal}
       >
@@ -362,16 +357,12 @@ const GameSelectModal: React.FC<{ game: Game; allowed: boolean }> = ({
                       </ul>
                     </div>
                   </div>
-                  <Form className="mt-5 sm:mt-6" method="post">
-                    <input type="hidden" name="gameId" value={game.id} />
-                    <input type="hidden" name="teamId" value={team} />
-                    <button
-                      type="submit"
-                      className="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-                    >
-                      Submit
-                    </button>
-                  </Form>
+                  <button
+                    onClick={submitForm}
+                    className="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                  >
+                    Add to Bet Slip
+                  </button>
                 </Dialog.Panel>
               </Transition.Child>
             </div>
@@ -379,5 +370,59 @@ const GameSelectModal: React.FC<{ game: Game; allowed: boolean }> = ({
         </Dialog>
       </Transition.Root>
     </>
+  );
+};
+
+const Cart = ({ cart }) => {
+  return (
+    <Popover className="z-20 ml-4 flow-root text-sm lg:relative lg:ml-8">
+      <Popover.Button className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+        View Betslip
+      </Popover.Button>
+      <Transition
+        as={Fragment}
+        enter="transition ease-out duration-200"
+        enterFrom="opacity-0"
+        enterTo="opacity-100"
+        leave="transition ease-in duration-150"
+        leaveFrom="opacity-100"
+        leaveTo="opacity-0"
+      >
+        <Popover.Panel className="absolute inset-x-0 top-16 mt-px bg-white pb-6 shadow-lg sm:px-2 lg:left-auto lg:right-0 lg:top-full lg:-mr-1.5 lg:mt-3 lg:w-80 lg:rounded-lg lg:ring-1 lg:ring-black lg:ring-opacity-5">
+          <Form
+            method="POST"
+            action="/betslip"
+            className="mx-auto max-w-2xl px-4"
+          >
+            <ul className="divide-y divide-gray-200">
+              {cart.map((team, index) => (
+                <li key={index} className="flex items-center py-6">
+                  <img
+                    src={team.imageSrc}
+                    className="h-16 w-16 flex-none"
+                    alt="team logo"
+                  />
+                  <div className="ml-4 flex-auto">
+                    <h3 className="font-medium text-gray-900">
+                      {team.name} {team.spread > 0 && "+"}
+                      {team.spread}
+                    </h3>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <input type="hidden" name="cart" value={JSON.stringify(cart)} />
+            <button
+              type="submit"
+              name="_action"
+              value="accept"
+              className="w-full rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50"
+            >
+              Continue to Unit Placement
+            </button>
+          </Form>
+        </Popover.Panel>
+      </Transition>
+    </Popover>
   );
 };

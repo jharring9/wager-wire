@@ -2,7 +2,7 @@ module.exports = {
   game: [
     {
       id: "1",
-      week: "0",
+      week: "5",
       team1: "Tennessee Titans",
       team2: "New Orleans Saints",
       team1Spread: 3.5,
@@ -13,7 +13,7 @@ module.exports = {
     },
     {
       id: "2",
-      week: "0",
+      week: "5",
       team1: "Detroit Lions",
       team2: "Kansas City Chiefs",
       team1Spread: 6.5,
@@ -24,7 +24,7 @@ module.exports = {
     },
     {
       id: "3",
-      week: "0",
+      week: "5",
       team1: "Cincinnati Bengals",
       team2: "Cleveland Browns",
       team1Spread: -9.5,
@@ -35,7 +35,7 @@ module.exports = {
     },
     {
       id: "4",
-      week: "0",
+      week: "5",
       team1: "Houston Texans",
       team2: "Baltimore Ravens",
       team1Spread: 6.5,
@@ -46,7 +46,7 @@ module.exports = {
     },
     {
       id: "5",
-      week: "0",
+      week: "5",
       team1: "Tampa Bay Buccaneers",
       team2: "Washington Commanders",
       team1Spread: 6.5,
@@ -57,7 +57,7 @@ module.exports = {
     },
     {
       id: "6",
-      week: "0",
+      week: "5",
       team1: "Jacksonville Jaguars",
       team2: "Indianapolis Colts",
       team1Spread: -6.5,
@@ -68,7 +68,7 @@ module.exports = {
     },
     {
       id: "7",
-      week: "0",
+      week: "5",
       team1: "San Francisco 49ers",
       team2: "Pittsburgh Steelers",
       team1Spread: -8.5,
