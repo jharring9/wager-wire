@@ -9,9 +9,11 @@ async function fetchGameLinesFromVegasAPI() {
   const db = await arc.tables();
 
   for (const game of data) {
+    const week = getNFLWeek(new Date(game.commence_time));
+    if(game.commence_time < Date.now()) continue;
     const thisGame = {
       id: game.id,
-      week: getNFLWeek(new Date(game.commence_time)).toString(),
+      week: week.toString(),
       team1: game.home_team,
       team2: game.away_team,
       team1Url: getTeamLogoURL(game.home_team),
@@ -19,17 +21,21 @@ async function fetchGameLinesFromVegasAPI() {
       date: formatDate(game.commence_time),
     };
 
-    if (game.bookmakers[0].markets[0].outcomes[0].name === game.home_team) {
-      thisGame.team1Spread = game.bookmakers[0].markets[0].outcomes[0].point;
-      thisGame.team2Spread = game.bookmakers[0].markets[0].outcomes[1].point;
+    if (game.bookmakers[0]?.markets[0]?.outcomes[0]?.name === game.home_team) {
+      thisGame.team1Spread = game.bookmakers[0]?.markets[0]?.outcomes[0]?.point;
+      thisGame.team2Spread = game.bookmakers[0]?.markets[0]?.outcomes[1]?.point;
     } else {
-      thisGame.team1Spread = game.bookmakers[0].markets[0].outcomes[1].point;
-      thisGame.team2Spread = game.bookmakers[0].markets[0].outcomes[0].point;
+      thisGame.team1Spread = game.bookmakers[0]?.markets[0]?.outcomes[1]?.point;
+      thisGame.team2Spread = game.bookmakers[0]?.markets[0]?.outcomes[0]?.point;
     }
 
+    console.log(thisGame);
     await db.game.put(thisGame);
   }
+
 }
+
+fetchGameLinesFromVegasAPI();
 
 export async function handler() {
   try {
