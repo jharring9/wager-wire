@@ -1,5 +1,6 @@
 import arc from "@architect/functions";
 import fetch from "node-fetch";
+import { DateTime } from "luxon";
 
 async function fetchGameLinesFromVegasAPI() {
   const response = await fetch(
@@ -9,8 +10,10 @@ async function fetchGameLinesFromVegasAPI() {
   const db = await arc.tables();
 
   for (const game of data) {
-    const week = getNFLWeek(new Date(game.commence_time));
-    if(game.commence_time < Date.now()) continue;
+    if (game.commence_time < Date.now()) continue;
+    const week = getNFLWeek(
+      DateTime.fromISO(game.commence_time, { zone: "UTC" }),
+    );
     const thisGame = {
       id: game.id,
       week: week.toString(),
@@ -29,13 +32,9 @@ async function fetchGameLinesFromVegasAPI() {
       thisGame.team2Spread = game.bookmakers[0]?.markets[0]?.outcomes[0]?.point;
     }
 
-    console.log(thisGame);
     await db.game.put(thisGame);
   }
-
 }
-
-fetchGameLinesFromVegasAPI();
 
 export async function handler() {
   try {
@@ -56,30 +55,14 @@ export async function handler() {
 }
 
 const formatDate = (dateObj) => {
-  const centralTime = new Date(
-    dateObj.toLocaleString("en-US", { timeZone: "America/Chicago" }),
+  const centralTime = DateTime.fromISO(dateObj, { zone: "UTC" }).setZone(
+    "America/Chicago",
   );
 
-  const days = [
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-  ];
-  const dayName = days[centralTime.getDay()];
-  let hours = centralTime.getHours();
-  let minutes = centralTime.getMinutes();
-
-  let period = "am";
-  if (hours >= 12) {
-    period = "pm";
-    if (hours > 12) hours -= 12;
-  }
-  if (hours === 0) hours = 12;
-  if (minutes < 10) minutes = "0" + minutes;
+  const dayName = centralTime.toFormat("EEEE");
+  const hours = centralTime.toFormat("h");
+  const minutes = centralTime.toFormat("mm");
+  const period = centralTime.toFormat("a");
 
   return `${dayName} @ ${hours}:${minutes}${period}`;
 };
@@ -93,8 +76,11 @@ const getTeamLogoURL = (
   return `${baseURL}${teamName}.png`;
 };
 
-const getNFLWeek = (today = new Date()) => {
-  const daysSinceStart =
-    (today.valueOf() - new Date("2023-09-05").valueOf()) / 1000 / 60 / 60 / 24;
+const getNFLWeek = (today = DateTime.utc()) => {
+  if (today.weekday === 2 && today.hour < 5) {
+    today = today.minus({ days: 1 });
+  }
+  const startOfSeason = DateTime.fromISO("2023-09-05", { zone: "UTC" });
+  const daysSinceStart = today.diff(startOfSeason, "days").days;
   return Math.floor(daysSinceStart / 7) + 1;
 };
