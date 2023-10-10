@@ -14,7 +14,7 @@ export const loader = async ({ request }: LoaderArgs) => {
 };
 
 const secondaryNavigation = [
-  { name: "Your Bets", href: "/bets/", icon: UserCircleIcon },
+  { name: "Your Profile", href: "/bets/", icon: UserCircleIcon },
   {
     name: "This Week's Bets",
     href: "/bets/week",

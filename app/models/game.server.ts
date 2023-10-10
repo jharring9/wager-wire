@@ -11,7 +11,7 @@ export type Game = {
   team1Url: string;
   team2Url: string;
   date: string;
-  winner: number;
+  winner: number; // 1, 2, or 0 if game hasn't been played yet
 };
 
 export async function getCurrentGames(): Promise<Array<Game>> {

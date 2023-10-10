@@ -13,7 +13,7 @@ import {
 } from "@heroicons/react/20/solid";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { requireUserId } from "~/session.server";
-import { getUserBetByWeek } from "~/models/bet.server";
+import { getBet } from "~/models/bet.server";
 import { getNFLWeek } from "~/utils";
 import { classNames } from "~/root";
 
@@ -21,31 +21,48 @@ export const meta: V2_MetaFunction = () => [
   { title: "WagerWire - Place Wager" },
 ];
 
+type SlipEntry = {
+  gameId: string;
+  teamId: string;
+  name: string;
+  spread: number;
+  imageSrc: string;
+  units: number;
+};
+
 export const loader = async ({ request }: LoaderArgs) => {
   const currentGames = await getCurrentGames();
   const userId = await requireUserId(request);
 
-  const currentBet = await getUserBetByWeek({
+  const currentBet = await getBet({
     userId: userId,
     week: getNFLWeek().toString(),
   });
 
-  // const dayOfWeek = new Date().getDay();
-  //TODO
-  // const bettingOpen = dayOfWeek >= 2 && dayOfWeek <= 4;
-  const bettingOpen = true;
+  const dayOfWeek = new Date().getDay();
+  const bettingOpen = dayOfWeek >= 2 && dayOfWeek <= 4;
 
   return json({ currentGames, currentBet, bettingOpen });
 };
 export default function PlaceWager() {
-  const [slip, setSlip] = useState<string[]>([]);
+  const [slip, setSlip] = useState<SlipEntry[]>([]);
   const { currentGames, currentBet, bettingOpen } =
     useLoaderData<typeof loader>();
   const [searchParams] = useSearchParams();
   const alertText = searchParams.get("alert");
+  const [errorText, setErrorText] = useState<string | null>(null);
 
   const addGameToSlip = (game) => {
-    setSlip([...slip, game]);
+    if (slip.some((existingGame) => existingGame.gameId === game.gameId)) {
+      setErrorText("You have already added this game to your betslip.");
+    } else setSlip([...slip, game]);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const removeBet = (index: number) => {
+    const newSlip = [...slip];
+    newSlip.splice(index, 1);
+    setSlip(newSlip);
   };
 
   return (
@@ -57,13 +74,16 @@ export default function PlaceWager() {
               Week {getNFLWeek()} Games
             </h1>
             <div className="mt-3 sm:ml-4 sm:mt-0">
-              {slip && slip.length > 0 && <Cart cart={slip} />}
+              {slip && slip.length > 0 && bettingOpen && (
+                <Cart cart={slip} removeBet={removeBet} />
+              )}
             </div>
           </div>
         </div>
       </header>
       <main className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
         <Alert text={alertText} />
+        <Alert warn text={errorText} />
         {!bettingOpen && (
           <Alert
             warn
@@ -359,7 +379,7 @@ const GameSelectModal: React.FC<{
                   </div>
                   <button
                     onClick={submitForm}
-                    className="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                    className="inline-flex w-full justify-center rounded-md bg-indigo-600 mt-4 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                   >
                     Add to Bet Slip
                   </button>
@@ -373,7 +393,7 @@ const GameSelectModal: React.FC<{
   );
 };
 
-const Cart = ({ cart }) => {
+const Cart = ({ cart, removeBet }) => {
   return (
     <Popover className="z-20 ml-4 flow-root text-sm lg:relative lg:ml-8">
       <Popover.Button className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
@@ -407,6 +427,16 @@ const Cart = ({ cart }) => {
                       {team.name} {team.spread > 0 && "+"}
                       {team.spread}
                     </h3>
+                  </div>
+                  <div className="ml-auto pl-3">
+                    <div className="-mx-1.5 -my-1.5">
+                      <button
+                        className="inline-flex rounded-md  p-1.5 focus:outline-none focus:ring-2 focus:ring-offset-2 bg-gray-50 text-gray-500 hover:bg-gray-100 focus:ring-gray-600 focus:ring-offset-gray-50"
+                        onClick={() => removeBet(index)}
+                      >
+                        <XMarkIcon className="h-5 w-5" aria-hidden="true" />
+                      </button>
+                    </div>
                   </div>
                 </li>
               ))}

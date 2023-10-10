@@ -27,11 +27,6 @@ user
 password
   pk *String # userId
 
-#TODO -- remove note
-note
-  pk *String  # userId
-  sk **String # noteId
-
 game
   week *String
   id **String
@@ -39,3 +34,9 @@ game
 bet
   pk *String  # userId
   sk **String # betId
+
+@tables-indexes
+bet
+  betId *String
+  projection keys
+  name ByWeek

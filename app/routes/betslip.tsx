@@ -69,7 +69,9 @@ const submitBetSlip = async ({ request }: ActionArgs) => {
   });
 
   const { week: returnedWeek } = await createBet({ userId, week, betSlip });
-  return redirect(`/bets/${returnedWeek}`);
+  return redirect(
+    `/bets/me/${returnedWeek}?alert=You have successfully placed your bet!`,
+  );
 };
 
 export default function SubmitBetslip() {
