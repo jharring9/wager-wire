@@ -168,7 +168,7 @@ const Betslip = ({ bets, removeBet, updateUnits }) => {
                           src={bet.imageSrc}
                           alt={bet.name}
                         />
-                        <p className="text-sm font-semibold leading-6 text-gray-900">
+                        <p className="text-sm truncate font-semibold leading-6 text-gray-900">
                           {bet.name} {bet.spread > 0 && "+"}
                           {bet.spread}
                         </p>

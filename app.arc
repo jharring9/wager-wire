@@ -37,6 +37,12 @@ bet
 
 @tables-indexes
 bet
-  betId *String
+  sk *String
   projection keys
   name ByWeek
+
+user
+  rankingType *String
+  totalProfit **Number
+  projection name
+  name ByTotalProfit

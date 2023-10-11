@@ -2,6 +2,7 @@ import arc from "@architect/functions";
 import type { User } from "~/models/user.server";
 import type { Game } from "~/models/game.server";
 import { getUserById } from "~/models/user.server";
+import { getNFLWeek } from "~/utils";
 
 export type Bet = {
   userId: User["id"];
@@ -42,6 +43,11 @@ export type ListBetItem = {
   week: string;
   scoringComplete: boolean;
   profit: number;
+};
+
+export type BetWithUserName = Bet & {
+  userName: User["name"];
+  email: User["email"];
 };
 
 const skToWeek = (sk: BetItem["sk"]): Bet["week"] => sk.replace(/^bet#/, "");
@@ -132,13 +138,62 @@ export async function getUserBets({
     ExpressionAttributeValues: { ":pk": userId },
   });
 
-  console.log(result.Items);
-
   return result.Items.map((result) => ({
     week: skToWeek(result.sk),
     profit: result.profit,
     scoringComplete: result.scoringComplete,
   }));
+}
+
+export async function getUserCurrentBet({
+  userId,
+}: Pick<Bet, "userId">): Promise<Bet | null> {
+  const db = await arc.tables();
+
+  const result = await db.bet.get({
+    pk: userId,
+    sk: weekToSk(getNFLWeek().toString()),
+  });
+
+  if (result) {
+    return {
+      userId: result.pk,
+      week: skToWeek(result.sk),
+      betSlip: result.betSlip,
+      scoringComplete: result.scoringComplete,
+    };
+  }
+  return null;
+}
+
+export async function getBetsForCurrentWeek(): Promise<Array<BetWithUserName>> {
+  const db = await arc.tables();
+
+  const currentWeek = `bet#${getNFLWeek()}`;
+
+  const betsResult = await db.bet.query({
+    IndexName: 'ByWeek',
+    KeyConditionExpression: "sk = :weekValue",
+    ExpressionAttributeValues: {
+      ":weekValue": currentWeek
+    },
+    ProjectionExpression: "pk, sk, scoringComplete" // Update if more data is desired
+  });
+
+  // For each bet, get the user's name
+  const betsWithUserName: Array<BetWithUserName> = [];
+  for (const bet of betsResult.Items) {
+    const user = await getUserById(bet.pk);
+    if (user) {
+      betsWithUserName.push({
+        ...bet,
+        userName: user.name,
+        email: user.email,
+      });
+    }
+  }
+
+  return betsWithUserName;
 }
 
 export async function createBet({

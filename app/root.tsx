@@ -38,7 +38,7 @@ export const loader = async ({ request }: LoaderArgs) => {
 
 const navigation = [
   { name: "Home", href: "/", current: false },
-  { name: "Wager", href: "wager", current: false },
+  { name: "Wager", href: "/wager", current: false },
   { name: "Standings", href: "/bets/standings", current: false },
 ];
 

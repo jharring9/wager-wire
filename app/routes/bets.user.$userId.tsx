@@ -1,23 +1,42 @@
 import type { V2_MetaFunction, LoaderArgs } from "@remix-run/node";
-import { useUser } from "~/utils";
 import { useLoaderData, useNavigate } from "@remix-run/react";
-import { json } from "@remix-run/node";
+import { json, redirect } from "@remix-run/node";
 import { getUserBets } from "~/models/bet.server";
 import { requireUserId } from "~/session.server";
+import { getUserByEmail } from "~/models/user.server";
+import invariant from "tiny-invariant";
 
-export const meta: V2_MetaFunction = () => [{ title: "WagerWire - Your Bets" }];
+export const meta: V2_MetaFunction = () => [
+  { title: "WagerWire - User Profile" },
+];
 
-export const loader = async ({ request }: LoaderArgs) => {
+export const loader = async ({ request, params }: LoaderArgs) => {
   const userId = await requireUserId(request);
-  const bets = await getUserBets({ userId });
-  if (!bets) {
+  invariant(params.userId, "Missing userId");
+
+  if(userId === `email#${params.userId}`) {
+    return redirect("/bets");
+  }
+
+  const user = await getUserByEmail(params.userId);
+  if (!user) {
     throw new Response("User not found", { status: 400 });
   }
-  return json(bets);
+
+  const bets = await getUserBets({ userId: `email#${params.userId}` });
+  if (!bets) {
+    throw new Response("User's bets not found", { status: 400 });
+  }
+  return json({
+    bets,
+    user: {
+      name: user.name,
+      profit: user.totalProfit,
+    },
+  });
 };
 
-export default function YourBetsPage() {
-  const user = useUser();
+export default function UserBetsPage() {
   const data = useLoaderData<typeof loader>();
   const navigate = useNavigate();
 
@@ -25,58 +44,11 @@ export default function YourBetsPage() {
     <div className="mx-auto max-w-2xl space-y-16 sm:space-y-20 lg:mx-0 lg:max-w-none">
       <div>
         <h2 className="text-base font-semibold leading-7 text-gray-900">
-          Your Information
+          {data.user.name}'s Bets
         </h2>
         <p className="mt-1 text-sm leading-6 text-gray-500">
-          Only your display name is publicly available.
-        </p>
-
-        <dl className="mt-6 space-y-6 divide-y divide-gray-100 border-t border-gray-200 text-sm leading-6">
-          <div className="pt-6 sm:flex">
-            <dt className="font-medium text-gray-900 sm:w-64 sm:flex-none sm:pr-6">
-              Display Name
-            </dt>
-            <dd className="mt-1 flex justify-between gap-x-6 sm:mt-0 sm:flex-auto">
-              <div className="text-gray-900">{user.name}</div>
-              <button
-                type="button"
-                className="font-semibold text-indigo-600 hover:text-indigo-500"
-              >
-                Update
-              </button>
-            </dd>
-          </div>
-          <div className="pt-6 sm:flex">
-            <dt className="font-medium text-gray-900 sm:w-64 sm:flex-none sm:pr-6">
-              Password
-            </dt>
-            <dd className="mt-1 flex justify-between gap-x-6 sm:mt-0 sm:flex-auto">
-              <div className="text-gray-900">********</div>
-              <button
-                type="button"
-                className="font-semibold text-indigo-600 hover:text-indigo-500"
-              >
-                Update
-              </button>
-            </dd>
-          </div>
-          <div className="pt-6 sm:flex">
-            <dt className="font-medium text-gray-900 sm:w-64 sm:flex-none sm:pr-6">
-              Email address
-            </dt>
-            <dd className="mt-1 flex justify-between gap-x-6 sm:mt-0 sm:flex-auto">
-              <div className="text-gray-900">{user.email}</div>
-            </dd>
-          </div>
-        </dl>
-      </div>
-
-      <div>
-        <h2 className="text-base font-semibold leading-7 text-gray-900">
-          Your Bets
-        </h2>
-        <p className="mt-1 text-sm leading-6 text-gray-500">
-          See all of your bets for the current season. Click on a bet to open the slip.
+          On the season, {data.user.name} has a net profit of {data.user.profit}{" "}
+          units. Click on a bet to open the slip.
         </p>
 
         <div className="flow-root mt-6">
@@ -107,7 +79,7 @@ export default function YourBetsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {data?.map((bet, index) => (
+                    {data?.bets.map((bet, index) => (
                       <tr
                         key={index}
                         onClick={() => navigate(`/bets/me/${bet.week}`)}

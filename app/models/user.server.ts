@@ -6,6 +6,8 @@ export type User = {
   id: `email#${string}`;
   email: string;
   name: string;
+  totalProfit: number;
+  rankingType: "PUBLIC" | "PRIVATE";
 };
 
 export type Password = { password: string };
@@ -23,6 +25,8 @@ export async function getUserById(id: User["id"]): Promise<User | null> {
       id: record.pk,
       email: record.email,
       name: record.name,
+      totalProfit: record.totalProfit,
+      rankingType: record.rankingType,
     };
   return null;
 }
@@ -44,6 +48,20 @@ async function getUserPasswordByEmail(email: User["email"]) {
   return null;
 }
 
+export async function getTop25UsersByProfit(): Promise<Array<User>> {
+  const db = await arc.tables();
+
+  const usersResult = await db.user.query({
+    IndexName: "ByTotalProfit",
+    KeyConditionExpression: "rankingType = :rankingValue",
+    ExpressionAttributeValues: { ":rankingValue": "PUBLIC" },
+    ScanIndexForward: false,
+    Limit: 25,
+  });
+
+  return usersResult.Items;
+}
+
 export async function createUser(
   name: User["name"],
   email: User["email"],
@@ -60,18 +78,14 @@ export async function createUser(
     pk: `email#${email}`,
     name,
     email,
+    totalProfit: 0,
+    rankingType: "PUBLIC",
   });
 
   const user = await getUserByEmail(email);
   invariant(user, `User not found after being created. This should not happen`);
 
   return user;
-}
-
-export async function deleteUser(email: User["email"]) {
-  const db = await arc.tables();
-  await db.password.delete({ pk: `email#${email}` });
-  await db.user.delete({ pk: `email#${email}` });
 }
 
 export async function verifyLogin(
