@@ -52,7 +52,7 @@ export async function getTop25UsersByProfit(): Promise<Array<User>> {
   const db = await arc.tables();
 
   const usersResult = await db.user.query({
-    IndexName: "ByTotalProfit",
+    IndexName: "byTotalProfit",
     KeyConditionExpression: "rankingType = :rankingValue",
     ExpressionAttributeValues: { ":rankingValue": "PUBLIC" },
     ScanIndexForward: false,

@@ -39,10 +39,10 @@ bet
 bet
   sk *String
   projection keys
-  name ByWeek
+  name byWeek
 
 user
   rankingType *String
   totalProfit **Number
   projection name
-  name ByTotalProfit
+  name byTotalProfit

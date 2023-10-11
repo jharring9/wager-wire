@@ -172,7 +172,7 @@ export async function getBetsForCurrentWeek(): Promise<Array<BetWithUserName>> {
   const currentWeek = `bet#${getNFLWeek()}`;
 
   const betsResult = await db.bet.query({
-    IndexName: 'ByWeek',
+    IndexName: 'byWeek',
     KeyConditionExpression: "sk = :weekValue",
     ExpressionAttributeValues: {
       ":weekValue": currentWeek
