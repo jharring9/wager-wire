@@ -41,3 +41,8 @@ bet
   projection keys
   name byWeek
 
+user
+  rankingType *String
+  totalProfit **Number
+  projection name
+  name byTotalProfit
