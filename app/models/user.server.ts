@@ -59,6 +59,8 @@ export async function getTop25UsersByProfit(): Promise<Array<User>> {
     Limit: 25,
   });
 
+  console.log("querying top 25 users:", usersResult);
+
   return usersResult.Items;
 }
 

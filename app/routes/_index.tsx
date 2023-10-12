@@ -1,8 +1,16 @@
-import type { V2_MetaFunction } from "@remix-run/node";
+import type { V2_MetaFunction, LoaderArgs } from "@remix-run/node";
 import { ChevronRightIcon } from "@heroicons/react/20/solid";
 import { Link } from "@remix-run/react";
+import { json, redirect } from "@remix-run/node";
+import { getUserId } from "~/session.server";
 
 export const meta: V2_MetaFunction = () => [{ title: "WagerWire" }];
+
+export const loader = async ({ request }: LoaderArgs) => {
+  const userId = await getUserId(request);
+  if (userId) return redirect("/");
+  return json({});
+};
 
 export default function Home() {
   return (
@@ -50,7 +58,8 @@ export default function Home() {
             WagerWire
           </h1>
           <p className="mt-6 text-lg leading-8 text-gray-600">
-            Wager your week on one spread bet. Choose from all available Vegas lines, updated daily. NFL wagering now live.
+            Wager your week on one spread bet. Choose from all available Vegas
+            lines, updated daily. NFL wagering now live.
           </p>
           <div className="mt-10 flex items-center gap-x-6">
             <Link

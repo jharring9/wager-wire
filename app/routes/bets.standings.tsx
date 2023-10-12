@@ -9,6 +9,7 @@ export const meta: V2_MetaFunction = () => [{ title: "WagerWire - Standings" }];
 export const loader = async ({ request }: LoaderArgs) => {
   await requireUserId(request);
   const top25 = await getTop25UsersByProfit();
+  console.log("received top 25 from backend:", top25)
   if (!top25) {
     throw new Response("Error loading top 25", { status: 400 });
   }

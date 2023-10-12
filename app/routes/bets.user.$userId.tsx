@@ -31,6 +31,7 @@ export const loader = async ({ request, params }: LoaderArgs) => {
     bets,
     user: {
       name: user.name,
+      email: user.email,
       profit: user.totalProfit,
     },
   });
@@ -82,7 +83,7 @@ export default function UserBetsPage() {
                     {data?.bets.map((bet, index) => (
                       <tr
                         key={index}
-                        onClick={() => navigate(`/bets/me/${bet.week}`)}
+                        onClick={() => navigate(`/bets/${data.user.email}/${bet.week}`)}
                         className="bg-white hover:bg-gray-50 cursor-pointer"
                       >
                         <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
