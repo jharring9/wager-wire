@@ -1,18 +1,12 @@
-import type { V2_MetaFunction, LoaderArgs } from "@remix-run/node";
+import type { V2_MetaFunction } from "@remix-run/node";
 import { ChevronRightIcon } from "@heroicons/react/20/solid";
 import { Link } from "@remix-run/react";
-import { json, redirect } from "@remix-run/node";
-import { getUserId } from "~/session.server";
+import { useOptionalUser } from "~/utils";
 
 export const meta: V2_MetaFunction = () => [{ title: "WagerWire" }];
 
-export const loader = async ({ request }: LoaderArgs) => {
-  const userId = await getUserId(request);
-  if (userId) return redirect("/");
-  return json({});
-};
-
 export default function Home() {
+  const user = useOptionalUser();
   return (
     <div className="relative isolate overflow-hidden bg-white -mt-24">
       <svg
@@ -62,18 +56,37 @@ export default function Home() {
             lines, updated daily. NFL wagering now live.
           </p>
           <div className="mt-10 flex items-center gap-x-6">
-            <Link
-              to="/join"
-              className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-            >
-              Get started
-            </Link>
-            <Link
-              to="/login"
-              className="text-sm font-semibold leading-6 text-gray-900"
-            >
-              Login <span aria-hidden="true">→</span>
-            </Link>
+            {user ? (
+              <>
+                <Link
+                  to="/bets"
+                  className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                >
+                  Your Profile
+                </Link>
+                <Link
+                  to="/bets/standings"
+                  className="text-sm font-semibold leading-6 text-gray-900"
+                >
+                  View Standings <span aria-hidden="true">→</span>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/join"
+                  className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                >
+                  Get started
+                </Link>
+                <Link
+                  to="/login"
+                  className="text-sm font-semibold leading-6 text-gray-900"
+                >
+                  Login <span aria-hidden="true">→</span>
+                </Link>
+              </>
+            )}
           </div>
         </div>
         <div className="mx-auto mt-16 flex max-w-2xl sm:mt-24 lg:ml-10 lg:mr-0 lg:mt-0 lg:max-w-none lg:flex-none xl:ml-32">
