@@ -37,6 +37,9 @@ export const loader = async ({ request, params }: LoaderArgs) => {
   });
 };
 
+/**
+ * Gets a user's bets and displays them in a table.
+ */
 export default function UserBetsPage() {
   const data = useLoaderData<typeof loader>();
   const navigate = useNavigate();
@@ -51,7 +54,6 @@ export default function UserBetsPage() {
           On the season, {data.user.name} has a net profit of {data.user.profit}{" "}
           units. Click on a bet to open the slip.
         </p>
-
         <div className="flow-root mt-6">
           <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
             <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">

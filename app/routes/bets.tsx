@@ -23,6 +23,9 @@ const secondaryNavigation = [
   { name: "Season Standings", href: "/bets/standings", icon: QueueListIcon },
 ];
 
+/**
+ * Parent route for all bet-related routes. Includes an error boundary.
+ */
 export default function Bets() {
   const matches = useMatches();
   const location = matches[matches.length - 1].pathname;

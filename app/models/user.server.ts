@@ -2,6 +2,9 @@ import arc from "@architect/functions";
 import bcrypt from "bcryptjs";
 import invariant from "tiny-invariant";
 
+/**
+ * A User is a person who has an account on WagerWire.
+ */
 export type User = {
   id: `email#${string}`;
   email: string;
@@ -10,8 +13,15 @@ export type User = {
   rankingType: "PUBLIC" | "PRIVATE";
 };
 
+/**
+ * A Password is a hashed password for a User.
+ */
 export type Password = { password: string };
 
+/**
+ * Get a User by their ID.
+ * @param id The ID of the User to get.
+ */
 export async function getUserById(id: User["id"]): Promise<User | null> {
   const db = await arc.tables();
   const result = await db.user.query({
@@ -28,13 +38,22 @@ export async function getUserById(id: User["id"]): Promise<User | null> {
       totalProfit: record.totalProfit,
       rankingType: record.rankingType,
     };
+
   return null;
 }
 
+/**
+ * Get a User by their email.
+ * @param email The email of the User to get.
+ */
 export async function getUserByEmail(email: User["email"]) {
   return getUserById(`email#${email}`);
 }
 
+/**
+ * Get a User's hashed password by their email.
+ * @param email The email of the User to get.
+ */
 async function getUserPasswordByEmail(email: User["email"]) {
   const db = await arc.tables();
   const result = await db.password.query({
@@ -48,6 +67,9 @@ async function getUserPasswordByEmail(email: User["email"]) {
   return null;
 }
 
+/**
+ * Get the top 25 Users by total profit, descending.
+ */
 export async function getTop25UsersByProfit(): Promise<Array<User>> {
   const db = await arc.tables();
 
@@ -59,11 +81,15 @@ export async function getTop25UsersByProfit(): Promise<Array<User>> {
     Limit: 25,
   });
 
-  console.log("querying top 25 users:", usersResult);
-
   return usersResult.Items;
 }
 
+/**
+ * Create a new User when a user registers.
+ * @param name The name of the User.
+ * @param email The email of the User.
+ * @param password The password of the User.
+ */
 export async function createUser(
   name: User["name"],
   email: User["email"],
@@ -90,6 +116,11 @@ export async function createUser(
   return user;
 }
 
+/**
+ * Verify a user's login attempt.
+ * @param email The email entered.
+ * @param password The password entered.
+ */
 export async function verifyLogin(
   email: User["email"],
   password: Password["password"],

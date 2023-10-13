@@ -5,6 +5,9 @@ import { useOptionalUser } from "~/utils";
 
 export const meta: V2_MetaFunction = () => [{ title: "WagerWire" }];
 
+/**
+ * Home page for the app.
+ */
 export default function Home() {
   const user = useOptionalUser();
   return (

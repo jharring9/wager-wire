@@ -61,6 +61,9 @@ export const action = async ({ request }: ActionArgs) => {
 
 export const meta: V2_MetaFunction = () => [{ title: "Login" }];
 
+/**
+ * Allows a user to login to their account.
+ */
 export default function LoginPage() {
   const [searchParams] = useSearchParams();
   const redirectTo =

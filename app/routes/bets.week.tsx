@@ -25,6 +25,9 @@ export const loader = async ({ request }: LoaderArgs) => {
   return json(currentWeekBets);
 };
 
+/**
+ * Displays all bets placed in the current week
+ */
 export default function WeeklyBets() {
   const data = useLoaderData<typeof loader>();
   const navigate = useNavigate();

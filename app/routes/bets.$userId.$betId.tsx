@@ -25,7 +25,10 @@ export const loader = async ({ params, request }: LoaderArgs) => {
   return json(bet);
 };
 
-export default function Standings() {
+/**
+ * Displays a user's bet slip for a given week.
+ */
+export default function DisplayUserBet() {
   const data = useLoaderData<typeof loader>();
   const [searchParams] = useSearchParams();
   const alertText = searchParams.get("alert");

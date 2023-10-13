@@ -76,6 +76,9 @@ export const action = async ({ request }: ActionArgs) => {
 
 export const meta: V2_MetaFunction = () => [{ title: "Sign Up" }];
 
+/**
+ * Allows a user to create an account.
+ */
 export default function Join() {
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get("redirectTo") ?? undefined;

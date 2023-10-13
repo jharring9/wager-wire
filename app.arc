@@ -1,6 +1,9 @@
 @app
 wager-wire-ae36
 
+@create
+autocreate true
+
 @aws
 region us-east-1
 profile default

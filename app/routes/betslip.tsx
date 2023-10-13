@@ -74,6 +74,9 @@ const submitBetSlip = async ({ request }: ActionArgs) => {
   );
 };
 
+/**
+ * Displays a UI to confirm and submit a betslip.
+ */
 export default function SubmitBetslip() {
   const [bets, setBets] = useState(useActionData<typeof action>() || []);
   const actionData = useActionData<typeof action>();

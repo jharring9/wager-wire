@@ -16,6 +16,9 @@ export const loader = async ({ request }: LoaderArgs) => {
   return json(bets);
 };
 
+/**
+ * Displays the current user's profile, including all of their bets.
+ */
 export default function YourBetsPage() {
   const user = useUser();
   const data = useLoaderData<typeof loader>();

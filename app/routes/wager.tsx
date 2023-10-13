@@ -44,6 +44,11 @@ export const loader = async ({ request }: LoaderArgs) => {
 
   return json({ currentGames, currentBet, bettingOpen });
 };
+
+/**
+ * Main page for placing a wager. Displays all games for the current week and
+ * allows the user to select one or more teams to bet on.
+ */
 export default function PlaceWager() {
   const [slip, setSlip] = useState<SlipEntry[]>([]);
   const { currentGames, currentBet, bettingOpen } =
