@@ -1,5 +1,6 @@
 import type { V2_MetaFunction, LoaderArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
+import { DateTime } from "luxon";
 import type { Game } from "~/models/game.server";
 import { getCurrentGames } from "~/models/game.server";
 import { Form, useLoaderData, useSearchParams } from "@remix-run/react";
@@ -220,17 +221,17 @@ const GameSelectModal: React.FC<{
         <div className="flex min-w-0 gap-x-4">
           <img
             className="h-12 w-12 flex-none"
-            src={game.team1Url}
-            alt={game.team1}
-          />
-          <img
-            className="h-12 w-12 flex-none"
             src={game.team2Url}
             alt={game.team2}
           />
+          <img
+            className="h-12 w-12 flex-none"
+            src={game.team1Url}
+            alt={game.team1}
+          />
           <div className="min-w-0 flex-auto">
             <p className="text-sm font-semibold leading-6 text-gray-900">
-              {game.team1} vs. {game.team2}
+              {game.team2} @ {game.team1}
             </p>
             <p className="mt-1 flex text-xs leading-5 text-gray-500">
               {game.team1Spread > 0
@@ -245,7 +246,9 @@ const GameSelectModal: React.FC<{
               <div className="flex-none rounded-full bg-emerald-500/20 p-1">
                 <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
               </div>
-              <p className="text-xs leading-5 text-gray-500">{game.date}</p>
+              <p className="text-xs leading-5 text-gray-500">
+                {formatDate(game.date)}
+              </p>
             </div>
           </div>
           <ChevronRightIcon
@@ -330,7 +333,8 @@ const GameSelectModal: React.FC<{
                                 </span>
                               </div>
                               <p className="mt-1 truncate text-sm text-gray-500 text-left">
-                                More team data coming...
+                                {game.team1Price > 0 && "+"}
+                                {game.team1Price}
                               </p>
                             </div>
                             <img
@@ -369,7 +373,8 @@ const GameSelectModal: React.FC<{
                                 </span>
                               </div>
                               <p className="mt-1 truncate text-sm text-gray-500 text-left">
-                                More team data coming...
+                                {game.team2Price > 0 && "+"}
+                                {game.team2Price}
                               </p>
                             </div>
                             <img
@@ -460,4 +465,19 @@ const Cart = ({ cart, removeBet }) => {
       </Transition>
     </Popover>
   );
+};
+
+const formatDate = (dateObj) => {
+  try {
+    const centralTime = DateTime.fromISO(dateObj, { zone: "UTC" }).setZone(
+      "America/Chicago",
+    );
+    const dayName = centralTime.toFormat("EEEE");
+    const hours = centralTime.toFormat("h");
+    const minutes = centralTime.toFormat("mm");
+    const period = centralTime.toFormat("a");
+    return `${dayName} @ ${hours}:${minutes}${period}`;
+  } catch (e) {
+    return dateObj;
+  }
 };

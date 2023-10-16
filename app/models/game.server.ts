@@ -11,6 +11,8 @@ export type Game = {
   team2: string;
   team1Spread: number;
   team2Spread: number;
+  team1Price: number;
+  team2Price: number;
   team1Url: string;
   team2Url: string;
   date: string;

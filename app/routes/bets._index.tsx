@@ -136,6 +136,7 @@ export default function YourBetsPage() {
                         </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                           <p className="text-sm font-semibold leading-6 text-gray-900">
+                            {bet.profit && bet.profit > 0 && "+"}
                             {bet.profit || 0}
                           </p>
                         </td>

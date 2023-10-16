@@ -11,25 +11,28 @@ async function fetchGameLinesFromVegasAPI() {
 
   for (const game of data) {
     if (game.commence_time < Date.now()) continue;
-    const week = getNFLWeek(
-      DateTime.fromISO(game.commence_time, { zone: "UTC" }),
-    );
+
+    const gameDate = DateTime.fromISO(game.commence_time, { zone: "UTC" });
     const thisGame = {
       id: game.id,
-      week: week.toString(),
+      week: getNFLWeek(gameDate).toString(),
       team1: game.home_team,
       team2: game.away_team,
       team1Url: getTeamLogoURL(game.home_team),
       team2Url: getTeamLogoURL(game.away_team),
-      date: formatDate(game.commence_time),
+      date: gameDate.toISO(),
     };
 
     if (game.bookmakers[0]?.markets[0]?.outcomes[0]?.name === game.home_team) {
       thisGame.team1Spread = game.bookmakers[0]?.markets[0]?.outcomes[0]?.point;
+      thisGame.team1Price = game.bookmakers[0]?.markets[0]?.outcomes[0]?.price;
       thisGame.team2Spread = game.bookmakers[0]?.markets[0]?.outcomes[1]?.point;
+      thisGame.team2Price = game.bookmakers[0]?.markets[0]?.outcomes[1]?.price;
     } else {
       thisGame.team1Spread = game.bookmakers[0]?.markets[0]?.outcomes[1]?.point;
+      thisGame.team1Price = game.bookmakers[0]?.markets[0]?.outcomes[1]?.price;
       thisGame.team2Spread = game.bookmakers[0]?.markets[0]?.outcomes[0]?.point;
+      thisGame.team2Price = game.bookmakers[0]?.markets[0]?.outcomes[0]?.price;
     }
 
     await db.game.put(thisGame);
@@ -53,19 +56,6 @@ export async function handler() {
     };
   }
 }
-
-const formatDate = (dateObj) => {
-  const centralTime = DateTime.fromISO(dateObj, { zone: "UTC" }).setZone(
-    "America/Chicago",
-  );
-
-  const dayName = centralTime.toFormat("EEEE");
-  const hours = centralTime.toFormat("h");
-  const minutes = centralTime.toFormat("mm");
-  const period = centralTime.toFormat("a");
-
-  return `${dayName} @ ${hours}:${minutes}${period}`;
-};
 
 const getTeamLogoURL = (
   fullName,
