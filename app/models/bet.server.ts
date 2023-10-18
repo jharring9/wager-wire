@@ -30,15 +30,6 @@ export type BetSlipItem = {
 };
 
 /**
- * A BetItem is the DynamoDB representation of a Bet. It is used to store and
- * retrieve Bet data from DynamoDB.
- */
-type BetItem = {
-  pk: User["id"];
-  sk: `bet#${Bet["week"]}`;
-};
-
-/**
  * A BetResult is the outcome of a BetSlipItem. It is either a win, loss, or
  * pending. A pending BetResult means that the game has not yet been played, or
  * that the bet has pushed.
@@ -93,8 +84,8 @@ export type BetWithUserName = Bet & {
  * Below are helper functions for converting between the DynamoDB representation
  * of a Bet and the TypeScript representation of a Bet.
  */
-const skToWeek = (sk: BetItem["sk"]): Bet["week"] => sk.replace(/^bet#/, "");
-const weekToSk = (id: Bet["week"]): BetItem["sk"] => `bet#${id}`;
+// export const skToWeek = (sk: BetItem["sk"]): Bet["week"] => sk.replace(/^bet#/, "");
+// export const weekToSk = (id: Bet["week"]): BetItem["sk"] => `bet#${id}`;
 
 /**
  * Get a Bet object from DynamoDB via the User's ID and the week that the bet
@@ -108,12 +99,12 @@ export async function getBet({
 }: Pick<Bet, "week" | "userId">): Promise<Bet | null> {
   const db = await arc.tables();
 
-  const result = await db.bet.get({ pk: userId, sk: weekToSk(week) });
+  const result = await db.bet.get({ pk: userId, sk: week });
 
   if (result) {
     return {
       userId: result.pk,
-      week: skToWeek(result.sk),
+      week: result.sk,
       betSlip: result.betSlip,
       profit: result.profit,
       scoringComplete: result.scoringComplete,
@@ -201,7 +192,7 @@ export async function getUserBets({
   });
 
   return result.Items.map((result) => ({
-    week: skToWeek(result.sk),
+    week: result.sk,
     profit: result.profit,
     scoringComplete: result.scoringComplete,
   }));
@@ -218,13 +209,13 @@ export async function getUserCurrentBet({
 
   const result = await db.bet.get({
     pk: userId,
-    sk: weekToSk(getNFLWeek().toString()),
+    sk: getNFLWeek().toString(),
   });
 
   if (result) {
     return {
       userId: result.pk,
-      week: skToWeek(result.sk),
+      week: result.sk,
       betSlip: result.betSlip,
       scoringComplete: result.scoringComplete,
     };
@@ -280,14 +271,14 @@ export async function createBet({
 
   const result = await db.bet.put({
     pk: userId,
-    sk: weekToSk(week),
+    sk: week,
     betSlip: betSlip,
     scoringComplete: false,
   });
 
   return {
     userId: result.pk,
-    week: skToWeek(result.sk),
+    week: result.sk,
     betSlip: result.betSlip,
     scoringComplete: result.scoringComplete,
   };
