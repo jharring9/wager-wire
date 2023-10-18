@@ -229,7 +229,7 @@ export async function getUserCurrentBet({
 export async function getBetsForCurrentWeek(): Promise<Array<BetWithUserName>> {
   const db = await arc.tables();
 
-  const currentWeek = `bet#${getNFLWeek()}`;
+  const currentWeek = `${getNFLWeek()}`;
 
   const betsResult = await db.bet.query({
     IndexName: "byWeek",

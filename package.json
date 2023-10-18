@@ -22,7 +22,7 @@
     "/public/build"
   ],
   "dependencies": {
-    "@architect/architect": "^10.14.0",
+    "@architect/architect": "^10.14.2",
     "@architect/functions": "^7.0.0",
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.0.18",
