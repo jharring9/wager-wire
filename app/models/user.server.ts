@@ -6,7 +6,7 @@ import invariant from "tiny-invariant";
  * A User is a person who has an account on WagerWire.
  */
 export type User = {
-  id: `email#${string}`;
+  id: string;
   email: string;
   name: string;
   totalProfit: number;
@@ -47,7 +47,7 @@ export async function getUserById(id: User["id"]): Promise<User | null> {
  * @param email The email of the User to get.
  */
 export async function getUserByEmail(email: User["email"]) {
-  return getUserById(`email#${email}`);
+  return getUserById(email);
 }
 
 /**
@@ -58,7 +58,7 @@ async function getUserPasswordByEmail(email: User["email"]) {
   const db = await arc.tables();
   const result = await db.password.query({
     KeyConditionExpression: "pk = :pk",
-    ExpressionAttributeValues: { ":pk": `email#${email}` },
+    ExpressionAttributeValues: { ":pk": email },
   });
 
   const [record] = result.Items;
@@ -98,12 +98,12 @@ export async function createUser(
   const hashedPassword = await bcrypt.hash(password, 10);
   const db = await arc.tables();
   await db.password.put({
-    pk: `email#${email}`,
+    pk: email,
     password: hashedPassword,
   });
 
   await db.user.put({
-    pk: `email#${email}`,
+    pk: email,
     name,
     email,
     totalProfit: 0,

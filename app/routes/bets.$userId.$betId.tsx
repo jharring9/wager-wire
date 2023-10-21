@@ -3,7 +3,7 @@ import { json } from "@remix-run/node";
 import { requireUserId } from "~/session.server";
 import invariant from "tiny-invariant";
 import { getBetWithData } from "~/models/bet.server";
-import { useLoaderData, useSearchParams } from "@remix-run/react";
+import { Link, useLoaderData, useSearchParams } from "@remix-run/react";
 import { Alert } from "~/routes/wager";
 
 export const meta: V2_MetaFunction = () => [{ title: "WagerWire - Bet" }];
@@ -15,9 +15,7 @@ export const loader = async ({ params, request }: LoaderArgs) => {
   const bet = await getBetWithData({
     week: params.betId,
     userId:
-      params.userId === "me"
-        ? await requireUserId(request)
-        : `email#${params.userId}`,
+      params.userId === "me" ? await requireUserId(request) : params.userId,
   });
   if (!bet) {
     throw new Response("Bet or user not found", { status: 400 });
@@ -37,10 +35,13 @@ export default function DisplayUserBet() {
     <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-none">
       <Alert text={alertText} />
       <h2 className="text-base font-semibold leading-7 text-gray-900">
-        {data.userName}'s Week {data?.week} Betslip
+        <Link to={`/bets/user/${data.userId}`} className="text-indigo-600">
+          {data.userName}
+        </Link>
+        's Week {data?.week} Betslip
       </h2>
       <p className="mt-1 text-sm leading-6 text-gray-500">
-        This betslip is publicly viewable to other users.
+        Click the user's name to view their betting history.
       </p>
       <div className="flow-root mt-6">
         <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
@@ -79,7 +80,7 @@ export default function DisplayUserBet() {
                             src={bet.teamUrl}
                             alt={bet.teamName}
                           />
-                          <p className="text-sm font-semibold leading-6 text-gray-900">
+                          <p className="text-sm font-semibold leading-6 text-gray-900 truncate">
                             {bet.teamName} {bet.teamSpread > 0 && "+"}
                             {bet.teamSpread}
                           </p>

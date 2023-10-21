@@ -11,13 +11,13 @@ profile default
 @scheduled
 line-grabber
   src scheduled/line-grabber
-  cron 0 8 ? * TUE *
+  cron 0 12 ? * TUE *
 score-grabber
   src scheduled/score-grabber
-  cron 0 0 ? * FRI-TUE *
+  cron 0 8 ? * FRI-TUE *
 scorer
   src scheduled/scorer
-  cron 0 8 ? * TUE *
+  cron 0 12 ? * TUE *
 
 @http
 /*

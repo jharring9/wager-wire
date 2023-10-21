@@ -14,7 +14,7 @@ export const loader = async ({ request, params }: LoaderArgs) => {
   const userId = await requireUserId(request);
   invariant(params.userId, "Missing userId");
 
-  if(userId === `email#${params.userId}`) {
+  if (userId === params.userId) {
     return redirect("/bets");
   }
 
@@ -23,7 +23,7 @@ export const loader = async ({ request, params }: LoaderArgs) => {
     throw new Response("User not found", { status: 400 });
   }
 
-  const bets = await getUserBets({ userId: `email#${params.userId}` });
+  const bets = await getUserBets({ userId: params.userId });
   if (!bets) {
     throw new Response("User's bets not found", { status: 400 });
   }
@@ -85,7 +85,9 @@ export default function UserBetsPage() {
                     {data?.bets.map((bet, index) => (
                       <tr
                         key={index}
-                        onClick={() => navigate(`/bets/${data.user.email}/${bet.week}`)}
+                        onClick={() =>
+                          navigate(`/bets/${data.user.email}/${bet.week}`)
+                        }
                         className="bg-white hover:bg-gray-50 cursor-pointer"
                       >
                         <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
