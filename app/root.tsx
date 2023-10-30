@@ -10,6 +10,7 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useMatches,
 } from "@remix-run/react";
 
 import React, { Fragment } from "react";
@@ -39,10 +40,14 @@ export const loader = async ({ request }: LoaderArgs) => {
 const navigation = [
   { name: "Home", href: "/", current: false },
   { name: "Wager", href: "/wager", current: false },
+  { name: "Current Bets", href: "/bets/week", current: false },
   { name: "Standings", href: "/bets/standings", current: false },
 ];
 
 export default function App() {
+  const matches = useMatches();
+  const location = matches[matches.length - 1].pathname;
+
   const user = useOptionalUser();
   return (
     <html lang="en" className="h-full bg-gray-100">
@@ -74,7 +79,7 @@ export default function App() {
                               key={item.name}
                               to={item.href}
                               className={classNames(
-                                item.current
+                                location === item.href
                                   ? "bg-gray-900 text-white"
                                   : "text-gray-300 hover:bg-gray-700 hover:text-white",
                                 "rounded-md px-3 py-2 text-sm font-medium",

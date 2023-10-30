@@ -43,14 +43,6 @@ export async function getUserById(id: User["id"]): Promise<User | null> {
 }
 
 /**
- * Get a User by their email.
- * @param email The email of the User to get.
- */
-export async function getUserByEmail(email: User["email"]) {
-  return getUserById(email);
-}
-
-/**
  * Get a User's hashed password by their email.
  * @param email The email of the User to get.
  */
@@ -110,7 +102,7 @@ export async function createUser(
     rankingType: "PUBLIC",
   });
 
-  const user = await getUserByEmail(email);
+  const user = await getUserById(email);
   invariant(user, `User not found after being created. This should not happen`);
 
   return user;
@@ -136,5 +128,35 @@ export async function verifyLogin(
     return undefined;
   }
 
-  return getUserByEmail(email);
+  return getUserById(email);
+}
+
+export async function updateName(id: User["id"], name: User["name"]) {
+  const user = await getUserById(id);
+  invariant(user, "User not found in database");
+
+  const db = await arc.tables();
+
+  await db.user.put({
+    pk: user.id,
+    email: user.email,
+    name: name,
+    totalProfit: user.totalProfit,
+    rankingType: user.rankingType,
+  });
+
+  return true;
+}
+
+export async function updatePassword(
+  id: User["id"],
+  password: Password["password"],
+) {
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const db = await arc.tables();
+  await db.password.put({
+    pk: id,
+    password: hashedPassword,
+  });
+  return true;
 }

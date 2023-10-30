@@ -2,7 +2,7 @@ import type { ActionArgs, LoaderArgs, V2_MetaFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import { Form, Link, useActionData, useSearchParams } from "@remix-run/react";
 
-import { createUser, getUserByEmail } from "~/models/user.server";
+import { createUser, getUserById } from "~/models/user.server";
 import { createUserSession, getUserId } from "~/session.server";
 import { safeRedirect, validateEmail } from "~/utils";
 import { Input } from "~/routes/login";
@@ -50,7 +50,7 @@ export const action = async ({ request }: ActionArgs) => {
     );
   }
 
-  const existingUser = await getUserByEmail(email);
+  const existingUser = await getUserById(email);
   if (existingUser) {
     return json(
       {

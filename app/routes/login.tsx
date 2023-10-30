@@ -170,26 +170,30 @@ export const Error = ({ title, error }) => {
 };
 
 export const Input = ({
-  label,
+  label = "",
   name,
   type = "text",
+  placeholder = "",
   required = true,
   error,
 }) => {
   return (
     <div>
-      <label
-        htmlFor={name}
-        className="block text-sm font-medium leading-6 text-gray-900"
-      >
-        {label}
-      </label>
+      {label && (
+        <label
+          htmlFor={name}
+          className="block text-sm font-medium leading-6 text-gray-900"
+        >
+          {label}
+        </label>
+      )}
       <div className="relative mt-2 rounded-md shadow-sm">
         <input
           type={type}
           name={name}
           id={name}
           required={required}
+          placeholder={placeholder}
           className={classNames(
             error
               ? "text-red-900 ring-red-300 placeholder:text-red-300 focus:ring-red-500"

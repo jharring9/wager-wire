@@ -2,18 +2,30 @@ import arc from "@architect/functions";
 import fetch from "node-fetch";
 import { DateTime } from "luxon";
 
+const API_URL =
+  "https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/";
+const API_KEY = "e58eb82afa5b0c9444b013c1afbf0a4d";
+
 async function fetchGameLinesFromVegasAPI() {
-  const response = await fetch(
-    "https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/?apiKey=e58eb82afa5b0c9444b013c1afbf0a4d&bookmakers=draftkings&markets=spreads&oddsFormat=american",
+  const res = await fetch(
+    `${API_URL}?apiKey=${API_KEY}&bookmakers=draftkings&markets=spreads&oddsFormat=american`,
   );
-  const data = await response.json();
+
+  if (res.status !== 200) {
+    throw new Error(`Failed to fetch data from Vegas API: HTTP ${res.status}`);
+  }
+
+  const data = await res.json();
   const db = await arc.tables();
 
   for (const game of data) {
     if (game.commence_time < Date.now()) continue;
 
     const gameDate = DateTime.fromISO(game.commence_time, { zone: "UTC" });
-    const thisGame = {
+    const isHomeTeamFirst =
+      game.bookmakers[0]?.markets[0]?.outcomes[0]?.name === game.home_team;
+
+    const gameRecord = {
       id: game.id,
       week: getNFLWeek(gameDate).toString(),
       team1: game.home_team,
@@ -21,21 +33,21 @@ async function fetchGameLinesFromVegasAPI() {
       team1Url: getTeamLogoURL(game.home_team),
       team2Url: getTeamLogoURL(game.away_team),
       date: gameDate.toISO(),
+      team1Spread:
+        game.bookmakers[0]?.markets[0]?.outcomes[isHomeTeamFirst ? 0 : 1]
+          ?.point,
+      team1Price:
+        game.bookmakers[0]?.markets[0]?.outcomes[isHomeTeamFirst ? 0 : 1]
+          ?.price,
+      team2Spread:
+        game.bookmakers[0]?.markets[0]?.outcomes[isHomeTeamFirst ? 1 : 0]
+          ?.point,
+      team2Price:
+        game.bookmakers[0]?.markets[0]?.outcomes[isHomeTeamFirst ? 1 : 0]
+          ?.price,
     };
 
-    if (game.bookmakers[0]?.markets[0]?.outcomes[0]?.name === game.home_team) {
-      thisGame.team1Spread = game.bookmakers[0]?.markets[0]?.outcomes[0]?.point;
-      thisGame.team1Price = game.bookmakers[0]?.markets[0]?.outcomes[0]?.price;
-      thisGame.team2Spread = game.bookmakers[0]?.markets[0]?.outcomes[1]?.point;
-      thisGame.team2Price = game.bookmakers[0]?.markets[0]?.outcomes[1]?.price;
-    } else {
-      thisGame.team1Spread = game.bookmakers[0]?.markets[0]?.outcomes[1]?.point;
-      thisGame.team1Price = game.bookmakers[0]?.markets[0]?.outcomes[1]?.price;
-      thisGame.team2Spread = game.bookmakers[0]?.markets[0]?.outcomes[0]?.point;
-      thisGame.team2Price = game.bookmakers[0]?.markets[0]?.outcomes[0]?.price;
-    }
-
-    await db.game.put(thisGame);
+    await db.game.put(gameRecord);
   }
 }
 

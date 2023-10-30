@@ -2,11 +2,18 @@ import arc from "@architect/functions";
 import fetch from "node-fetch";
 import { DateTime } from "luxon";
 
+const API_URL =
+  "https://api.the-odds-api.com/v4/sports/americanfootball_nfl/scores/";
+const API_KEY = "e58eb82afa5b0c9444b013c1afbf0a4d";
+
 async function updateWinnerBasedOnScores() {
-  const scoresResponse = await fetch(
-    "https://api.the-odds-api.com/v4/sports/americanfootball_nfl/scores/?apiKey=e58eb82afa5b0c9444b013c1afbf0a4d&daysFrom=3",
-  );
-  const scoresData = await scoresResponse.json();
+  const res = await fetch(`${API_URL}?apiKey=${API_KEY}&daysFrom=3`);
+
+  if (res.status !== 200) {
+    throw new Error(`Failed to fetch data from Vegas API: HTTP ${res.status}`);
+  }
+
+  const scoresData = await res.json();
   const db = await arc.tables();
 
   for (const gameScore of scoresData) {

@@ -3,7 +3,7 @@ import { useLoaderData, useNavigate } from "@remix-run/react";
 import { json, redirect } from "@remix-run/node";
 import { getUserBets } from "~/models/bet.server";
 import { requireUserId } from "~/session.server";
-import { getUserByEmail } from "~/models/user.server";
+import { getUserById } from "~/models/user.server";
 import invariant from "tiny-invariant";
 
 export const meta: V2_MetaFunction = () => [
@@ -18,7 +18,7 @@ export const loader = async ({ request, params }: LoaderArgs) => {
     return redirect("/bets");
   }
 
-  const user = await getUserByEmail(params.userId);
+  const user = await getUserById(params.userId);
   if (!user) {
     throw new Response("User not found", { status: 400 });
   }
