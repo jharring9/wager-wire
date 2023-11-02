@@ -73,7 +73,13 @@ export async function getTop25UsersByProfit(): Promise<Array<User>> {
     Limit: 25,
   });
 
-  return usersResult.Items;
+  return usersResult.Items.map((user) => ({
+    id: user.pk,
+    email: user.email,
+    name: user.name,
+    totalProfit: user.totalProfit,
+    rankingType: user.rankingType,
+  }));
 }
 
 /**

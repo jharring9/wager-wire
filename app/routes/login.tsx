@@ -6,7 +6,7 @@ import { verifyLogin } from "~/models/user.server";
 import { createUserSession, getUserId } from "~/session.server";
 import { safeRedirect, validateEmail } from "~/utils";
 import { ExclamationCircleIcon, XCircleIcon } from "@heroicons/react/20/solid";
-import { classNames } from "~/root";
+import { classNames } from "~/shared";
 
 export const loader = async ({ request }: LoaderArgs) => {
   const userId = await getUserId(request);
@@ -77,10 +77,10 @@ export default function LoginPage() {
         <div className="sm:mx-auto sm:w-full sm:max-w-sm">
           <img
             className="mx-auto h-10 w-auto"
-            src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
+            src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500"
             alt="Wager Wire"
           />
-          <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
+          <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-white">
             Sign in to your account
           </h2>
         </div>
@@ -106,11 +106,11 @@ export default function LoginPage() {
                   id="remember"
                   name="remember"
                   type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                 />
                 <label
                   htmlFor="remember"
-                  className="ml-3 block text-sm leading-6 text-gray-900"
+                  className="ml-3 block text-sm leading-6 text-white"
                 >
                   Remember me
                 </label>
@@ -119,7 +119,7 @@ export default function LoginPage() {
               <div className="text-sm leading-6">
                 <Link
                   to="#"
-                  className="font-semibold text-indigo-600 hover:text-indigo-500"
+                  className="font-semibold text-indigo-500 hover:text-indigo-400"
                 >
                   Forgot password?
                 </Link>
@@ -131,7 +131,7 @@ export default function LoginPage() {
             <div>
               <button
                 type="submit"
-                className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                className="flex w-full justify-center rounded-md bg-indigo-500 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
               >
                 Sign in
               </button>
@@ -142,7 +142,7 @@ export default function LoginPage() {
             Not a member?{" "}
             <Link
               to={{ pathname: "/join", search: searchParams.toString() }}
-              className="font-semibold leading-6 text-indigo-600 hover:text-indigo-500"
+              className="font-semibold leading-6 text-indigo-400 hover:text-indigo-300"
             >
               Sign up now
             </Link>
@@ -182,7 +182,7 @@ export const Input = ({
       {label && (
         <label
           htmlFor={name}
-          className="block text-sm font-medium leading-6 text-gray-900"
+          className="block text-sm font-medium leading-6 text-white"
         >
           {label}
         </label>
@@ -198,7 +198,7 @@ export const Input = ({
             error
               ? "text-red-900 ring-red-300 placeholder:text-red-300 focus:ring-red-500"
               : "",
-            "block w-full rounded-md border-0 py-1.5 pr-10 ring-1 ring-inset focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6",
+            "block w-full rounded-md border-0 bg-white/5 py-1.5 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6",
           )}
         />
         {error && (

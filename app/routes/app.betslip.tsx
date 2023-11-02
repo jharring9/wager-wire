@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Form, useActionData, useNavigate } from "@remix-run/react";
 import { createBet } from "~/models/bet.server";
 import { requireUserId } from "~/session.server";
-import { Alert } from "~/routes/wager";
+import { Notification } from "~/shared";
 
 export const meta: V2_MetaFunction = () => [
   { title: "WagerWire - Your Betslip" },
@@ -37,7 +37,7 @@ const submitBetSlip = async ({ request }: ActionArgs) => {
   const formData = await request.formData();
   const bets = JSON.parse(formData.get("slip") as string);
   if (!bets || typeof bets !== "object" || bets.length === 0)
-    throw redirect("/wager");
+    throw redirect("/app/wager");
 
   let totalUnits = 0;
   for (const bet of bets) {
@@ -70,7 +70,7 @@ const submitBetSlip = async ({ request }: ActionArgs) => {
 
   const { week: returnedWeek } = await createBet({ userId, week, betSlip });
   return redirect(
-    `/bets/me/${returnedWeek}?alert=You have successfully placed your bet!`,
+    `/app/me/${returnedWeek}?alert=You have successfully placed your bet!`,
   );
 };
 
@@ -87,7 +87,7 @@ export default function SubmitBetslip() {
     newBets.splice(index, 1);
     setBets(newBets);
 
-    if (newBets.length === 0) navigate("/wager");
+    if (newBets.length === 0) navigate("/app/wager");
   };
 
   const updateUnits = (index: number, units: number) => {
@@ -121,7 +121,7 @@ export default function SubmitBetslip() {
         </div>
       </header>
       <main className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-        <Alert warn text={actionData?.errors?.units} />
+        <Notification error text={actionData?.errors?.units} />
         <div className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
           {/* Page-specific content below */}
           <Betslip

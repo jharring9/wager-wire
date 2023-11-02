@@ -3,6 +3,7 @@ import type { User } from "~/models/user.server";
 import type { Game } from "~/models/game.server";
 import { getUserById } from "~/models/user.server";
 import { getNFLWeek } from "~/utils";
+import { DateTime } from "luxon";
 
 /**
  * A Bet is a collection of BetSlipItems that a User has placed for a given
@@ -15,6 +16,7 @@ export type Bet = {
   betSlip: BetSlipItem[];
   profit?: number;
   scoringComplete: boolean;
+  date: string;
 };
 
 /**
@@ -43,9 +45,12 @@ export type BetResult = "win" | "loss" | "pending";
  * for each item in the bet slip.
  */
 export type BetWithData = {
-  userId: User["id"];
+  userId: Bet["userId"];
   userName: User["name"];
-  week: string;
+  week: Bet["week"];
+  date: Bet["date"];
+  profit: Bet["profit"];
+  scoringComplete: Bet["scoringComplete"];
   betSlip: BetSlipItemWithData[];
 };
 
@@ -55,9 +60,10 @@ export type BetWithData = {
  * URL, and bet status are all resolved and returned in the BetSlipItemWithData.
  */
 export type BetSlipItemWithData = BetSlipItem & {
-  teamName: string;
-  teamSpread: number;
-  teamUrl: string;
+  teamName: Game["team1"] | Game["team2"];
+  teamSpread: Game["team1Spread"] | Game["team2Spread"];
+  teamUrl: Game["team1Url"] | Game["team2Url"];
+  date: Game["date"];
   status: BetResult;
 };
 
@@ -69,6 +75,8 @@ export type ListBetItem = {
   week: string;
   scoringComplete: boolean;
   profit: number;
+  date: string;
+  logos: string[];
 };
 
 /**
@@ -79,13 +87,6 @@ export type BetWithUserName = Bet & {
   userName: User["name"];
   email: User["email"];
 };
-
-/**
- * Below are helper functions for converting between the DynamoDB representation
- * of a Bet and the TypeScript representation of a Bet.
- */
-// export const skToWeek = (sk: BetItem["sk"]): Bet["week"] => sk.replace(/^bet#/, "");
-// export const weekToSk = (id: Bet["week"]): BetItem["sk"] => `bet#${id}`;
 
 /**
  * Get a Bet object from DynamoDB via the User's ID and the week that the bet
@@ -108,6 +109,7 @@ export async function getBet({
       betSlip: result.betSlip,
       profit: result.profit,
       scoringComplete: result.scoringComplete,
+      date: result.date,
     };
   }
 
@@ -139,6 +141,9 @@ export async function getBetWithData({
     userId: bet.userId,
     userName: user.name,
     week: bet.week,
+    date: bet.date,
+    profit: bet.profit,
+    scoringComplete: bet.scoringComplete,
     betSlip: [],
   };
 
@@ -170,6 +175,7 @@ export async function getBetWithData({
       teamSpread: userTeamSpread,
       teamUrl: userTeamUrl,
       status: status,
+      date: game.date,
     });
   }
 
@@ -188,14 +194,25 @@ export async function getUserBets({
   const result = await db.bet.query({
     KeyConditionExpression: "pk = :pk",
     ExpressionAttributeValues: { ":pk": userId },
-    ProjectionExpression: "sk, profit, scoringComplete"
   });
 
-  return result.Items.map((result) => ({
-    week: result.sk,
-    profit: result.profit,
-    scoringComplete: result.scoringComplete,
-  }));
+  const bets: Array<ListBetItem> = [];
+  for (const item of result.Items) {
+    const logos: ListBetItem["logos"] = [];
+    for (const betItem of item.betSlip) {
+      const game = await db.game.get({ week: item.sk, id: betItem.gameId });
+      if (!game) continue;
+      logos.push(betItem.teamId === 1 ? game.team1Url : game.team2Url);
+    }
+    bets.push({
+      week: item.sk,
+      scoringComplete: item.scoringComplete,
+      profit: item.profit,
+      date: item.date,
+      logos: logos,
+    });
+  }
+  return bets;
 }
 
 /**
@@ -218,6 +235,7 @@ export async function getUserCurrentBet({
       week: result.sk,
       betSlip: result.betSlip,
       scoringComplete: result.scoringComplete,
+      date: result.date,
     };
   }
   return null;
@@ -248,7 +266,7 @@ export async function getBetsForCurrentWeek(): Promise<Array<BetWithUserName>> {
       betsWithUserName.push({
         ...bet,
         userName: user.name,
-        email: user.email,
+        userId: user.id,
       });
     }
   }
@@ -274,6 +292,7 @@ export async function createBet({
     sk: week,
     betSlip: betSlip,
     scoringComplete: false,
+    date: DateTime.utc().setZone("America/Chicago").toISO(),
   });
 
   return {
@@ -281,5 +300,6 @@ export async function createBet({
     week: result.sk,
     betSlip: result.betSlip,
     scoringComplete: result.scoringComplete,
+    date: result.date,
   };
 }

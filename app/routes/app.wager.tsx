@@ -6,17 +6,12 @@ import { getCurrentGames } from "~/models/game.server";
 import { Form, useLoaderData, useSearchParams } from "@remix-run/react";
 import { Fragment, useRef, useState } from "react";
 import { Dialog, Popover, Transition } from "@headlessui/react";
-import {
-  CheckCircleIcon,
-  ChevronRightIcon,
-  ExclamationTriangleIcon,
-  LockClosedIcon,
-} from "@heroicons/react/20/solid";
+import { ChevronRightIcon, LockClosedIcon } from "@heroicons/react/20/solid";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { requireUserId } from "~/session.server";
 import { getBet } from "~/models/bet.server";
 import { getNFLWeek } from "~/utils";
-import { classNames } from "~/root";
+import { classNames, Notification } from "~/shared";
 
 export const meta: V2_MetaFunction = () => [
   { title: "WagerWire - Place Wager" },
@@ -61,8 +56,10 @@ export default function PlaceWager() {
   const addGameToSlip = (game) => {
     if (slip.some((existingGame) => existingGame.gameId === game.gameId)) {
       setErrorText("You have already added this game to your betslip.");
-    } else setSlip([...slip, game]);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      setErrorText(null);
+      setSlip([...slip, game]);
+    }
   };
 
   const removeBet = (index: number) => {
@@ -88,20 +85,18 @@ export default function PlaceWager() {
         </div>
       </header>
       <main className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-        <Alert text={alertText} />
-        <Alert warn text={errorText} />
-        {!bettingOpen && (
-          <Alert
-            warn
-            text="Betting is closed for the week. You may not place any bets at this point."
-          />
-        )}
-        {bettingOpen && currentBet && (
-          <Alert
-            warn
-            text="You have already submitted your slate this week. Making another submission will override your current slate."
-          />
-        )}
+        <Notification
+          text={
+            alertText ||
+            errorText ||
+            (!bettingOpen &&
+              "Betting is closed for the week. You may not place any bets at this point.") ||
+            (bettingOpen &&
+              currentBet &&
+              "You have already submitted your slate this week. Making another submission will override your current slate.")
+          }
+          error={!!errorText || !bettingOpen || !!currentBet}
+        />
 
         <div className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
           {/* Page-specific content below */}
@@ -120,62 +115,6 @@ export default function PlaceWager() {
     </div>
   );
 }
-
-export const Alert = ({ text, warn = false }) => {
-  const [show, setShow] = useState(true);
-
-  return (
-    <div
-      className={classNames(
-        show && text
-          ? "rounded-md p-4 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mb-4"
-          : "hidden",
-        warn ? "bg-yellow-50" : "bg-green-50",
-      )}
-    >
-      <div className="flex">
-        <div className="flex-shrink-0">
-          {warn ? (
-            <ExclamationTriangleIcon
-              className="text-yellow-400 h-5 w-5"
-              aria-hidden="true"
-            />
-          ) : (
-            <CheckCircleIcon
-              className="text-green-400 h-5 w-5"
-              aria-hidden="true"
-            />
-          )}
-        </div>
-        <div className="ml-3">
-          <p
-            className={classNames(
-              warn ? "text-yellow-800" : "text-green-800",
-              "text-sm font-medium",
-            )}
-          >
-            {text}
-          </p>
-        </div>
-        <div className="ml-auto pl-3">
-          <div className="-mx-1.5 -my-1.5">
-            <button
-              onClick={() => setShow(false)}
-              className={classNames(
-                warn
-                  ? "bg-yellow-50 text-yellow-500 hover:bg-yellow-100 focus:ring-yellow-600 focus:ring-offset-yellow-50"
-                  : "bg-green-50 text-green-500 hover:bg-green-100 focus:ring-green-600 focus:ring-offset-green-50",
-                "inline-flex rounded-md  p-1.5 focus:outline-none focus:ring-2 focus:ring-offset-2",
-              )}
-            >
-              <XMarkIcon className="h-5 w-5" aria-hidden="true" />
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const GameSelectModal: React.FC<{
   game: Game;
@@ -421,7 +360,7 @@ const Cart = ({ cart, removeBet }) => {
         <Popover.Panel className="absolute inset-x-0 top-16 mt-px bg-white pb-6 shadow-lg sm:px-2 lg:left-auto lg:right-0 lg:top-full lg:-mr-1.5 lg:mt-3 lg:w-80 lg:rounded-lg lg:ring-1 lg:ring-black lg:ring-opacity-5">
           <Form
             method="POST"
-            action="/betslip"
+            action="/app/betslip"
             className="mx-auto max-w-2xl px-4"
           >
             <ul className="divide-y divide-gray-200">

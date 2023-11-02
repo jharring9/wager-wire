@@ -76,3 +76,16 @@ export function getNFLWeek(today: Date = new Date()) {
     (today.valueOf() - NFL_SEASON_START.valueOf()) / 1000 / 60 / 60 / 24;
   return Math.floor(daysSinceStart / 7) + 1;
 }
+
+export function getWeekDays(nflWeek: string): string {
+  const weekStartDate = new Date(NFL_SEASON_START.getTime());
+  weekStartDate.setDate(
+    NFL_SEASON_START.getDate() + (parseInt(nflWeek) - 1) * 7 + 1,
+  );
+
+  const weekEndDate = new Date(weekStartDate.getTime());
+  weekEndDate.setDate(weekStartDate.getDate() + 6);
+
+  const formatDate = (date: Date) => `${date.getMonth() + 1}/${date.getDate()}`;
+  return `${formatDate(weekStartDate)} - ${formatDate(weekEndDate)}`;
+}
