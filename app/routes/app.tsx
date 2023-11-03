@@ -1,4 +1,4 @@
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { classNames } from "~/shared";
@@ -52,6 +52,10 @@ export default function Dashboard() {
   const matches = useMatches();
   const location = matches[matches.length - 1].pathname;
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location]);
 
   return (
     <>
