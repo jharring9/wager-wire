@@ -44,7 +44,7 @@ bet
 @tables-indexes
 bet
   sk *String
-  projection scoringComplete betSlip
+  projection all
   name byWeek
 
 user

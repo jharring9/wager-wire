@@ -26,7 +26,7 @@ import {
 const navigation = [
   { name: "Home", href: "/", icon: HomeIcon },
   { name: "Place Wager", href: "/app/wager", icon: PlusIcon },
-  { name: "Your Bets", href: "/app/", icon: BanknotesIcon },
+  { name: "Your Bets", href: "/app/user/me", icon: BanknotesIcon },
   {
     name: "This Week's Bets",
     href: "/app/week",
