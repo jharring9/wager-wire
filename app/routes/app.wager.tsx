@@ -1,17 +1,20 @@
 import type { V2_MetaFunction, LoaderArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { DateTime } from "luxon";
-import type { Game } from "~/models/game.server";
 import { getCurrentGames } from "~/models/game.server";
 import { Form, useLoaderData, useSearchParams } from "@remix-run/react";
-import { Fragment, useRef, useState } from "react";
-import { Dialog, Popover, Transition } from "@headlessui/react";
-import { ChevronRightIcon, LockClosedIcon } from "@heroicons/react/20/solid";
+import { Fragment, useState } from "react";
+import { Dialog, Popover, RadioGroup, Transition } from "@headlessui/react";
+import { ChevronRightIcon, ShieldCheckIcon } from "@heroicons/react/20/solid";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { requireUserId } from "~/session.server";
 import { getBet } from "~/models/bet.server";
 import { getNFLWeek } from "~/utils";
-import { classNames, Notification } from "~/shared";
+import {
+  classNames,
+  Notification,
+  formatLongDate,
+  checkGameStarted,
+} from "~/shared";
 
 export const meta: V2_MetaFunction = () => [
   { title: "WagerWire - Place Wager" },
@@ -35,10 +38,7 @@ export const loader = async ({ request }: LoaderArgs) => {
     week: getNFLWeek().toString(),
   });
 
-  const dayOfWeek = new Date().getDay();
-  const bettingOpen = dayOfWeek >= 2 && dayOfWeek <= 4;
-
-  return json({ currentGames, currentBet, bettingOpen });
+  return json({ currentGames, currentBet });
 };
 
 /**
@@ -47,8 +47,7 @@ export const loader = async ({ request }: LoaderArgs) => {
  */
 export default function PlaceWager() {
   const [slip, setSlip] = useState<SlipEntry[]>([]);
-  const { currentGames, currentBet, bettingOpen } =
-    useLoaderData<typeof loader>();
+  const { currentGames, currentBet } = useLoaderData<typeof loader>();
   const [searchParams] = useSearchParams();
   const alertText = searchParams.get("alert");
   const [errorText, setErrorText] = useState<string | null>(null);
@@ -69,65 +68,50 @@ export default function PlaceWager() {
   };
 
   return (
-    <div className="min-h-full">
-      <header className="bg-white shadow">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <div className="sm:flex sm:items-center sm:justify-between">
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-              Week {getNFLWeek()} Games
-            </h1>
-            <div className="mt-3 sm:ml-4 sm:mt-0">
-              {slip && slip.length > 0 && bettingOpen && (
-                <Cart cart={slip} removeBet={removeBet} />
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
-      <main className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-        <Notification
-          text={
-            alertText ||
-            errorText ||
-            (!bettingOpen &&
-              "Betting is closed for the week. You may not place any bets at this point.") ||
-            (bettingOpen &&
-              currentBet &&
-              "You have already submitted your slate this week. Making another submission will override your current slate.")
-          }
-          error={!!errorText || !bettingOpen || !!currentBet}
-        />
+    <>
+      <Notification
+        text={
+          alertText ||
+          errorText ||
+          (currentBet &&
+            "You have already submitted your slate this week. Making another submission will override your current slate.")
+        }
+        error={!!errorText || !!currentBet}
+      />
+      <main>
+        <header className="z-10 flex sticky top-0 bg-gray-900 items-center justify-between border-b border-white/5 px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
+          <h1 className="text-base font-semibold leading-7 text-white">
+            Week {getNFLWeek()} Games
+          </h1>
 
-        <div className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
-          {/* Page-specific content below */}
-          <ul className="divide-y divide-gray-100 overflow-hidden bg-white shadow-sm ring-1 ring-gray-900/5 rounded-lg sm:rounded-xl">
-            {currentGames.map((game) => (
-              <GameSelectModal
-                game={game}
-                key={game.id}
-                allowed={true}
-                addGameToSlip={addGameToSlip}
-              />
-            ))}
-          </ul>
-        </div>
+          {slip && slip.length > 0 && true && (
+            <Cart cart={slip} removeBet={removeBet} />
+          )}
+        </header>
+
+        {/* Games list */}
+        <ul className="divide-y divide-white/5">
+          {currentGames.map((game, index) => (
+            <GameSelectionModal
+              key={index}
+              game={game}
+              allowed={true}
+              addGameToSlip={addGameToSlip}
+            />
+          ))}
+        </ul>
       </main>
-    </div>
+    </>
   );
 }
 
-const GameSelectModal: React.FC<{
-  game: Game;
-  allowed: boolean;
-  addGameToSlip: Function;
-}> = ({ game, allowed, addGameToSlip }) => {
+const GameSelectionModal = ({ game, allowed, addGameToSlip }) => {
   const [open, setOpen] = useState(false);
-  const [team, setTeam] = useState(0);
-  const cancelButtonRef = useRef(null);
+  const [team, setTeam] = useState("0");
 
   const closeModal = () => {
     setOpen(false);
-    setTeam(0);
+    setTeam("");
   };
 
   const openModal = () => {
@@ -136,73 +120,101 @@ const GameSelectModal: React.FC<{
 
   const submitForm = () => {
     closeModal();
-    if (team === 0) return;
+    if (team !== "1" && team !== "2") return;
     addGameToSlip({
       gameId: game.id,
       teamId: team,
-      name: team === 1 ? game.team1 : game.team2,
-      spread: team === 1 ? game.team1Spread : game.team2Spread,
-      imageSrc: team === 1 ? game.team1Url : game.team2Url,
+      name: team === "1" ? game.team1 : game.team2,
+      spread: team === "1" ? game.team1Spread : game.team2Spread,
+      imageSrc: team === "1" ? game.team1Url : game.team2Url,
       units: 0,
     });
   };
 
+  const gameStarted = checkGameStarted(game.date);
+
   return (
     <>
       <li
-        key={game.id}
+        onClick={gameStarted ? undefined : openModal}
         className={classNames(
-          allowed ? "hover:bg-gray-50 hover:bg-gray-200 cursor-pointer" : "",
-          "flex justify-between gap-x-6 px-4 py-5 sm:px-6",
+          !gameStarted && "cursor-pointer hover:bg-gray-800",
+          "relative flex items-center space-x-4 px-4 py-4 sm:px-6 lg:px-8",
         )}
-        onClick={openModal}
       >
-        <div className="flex min-w-0 gap-x-4">
-          <img
-            className="h-12 w-12 flex-none"
-            src={game.team2Url}
-            alt={game.team2}
-          />
-          <img
-            className="h-12 w-12 flex-none"
-            src={game.team1Url}
-            alt={game.team1}
-          />
-          <div className="min-w-0 flex-auto">
-            <p className="text-sm font-semibold leading-6 text-gray-900">
-              {game.team2} @ {game.team1}
-            </p>
-            <p className="mt-1 flex text-xs leading-5 text-gray-500">
+        <div className="min-w-0 flex-auto">
+          <div className="flex items-center gap-x-3">
+            <div
+              className={classNames(
+                gameStarted
+                  ? "text-red-500 bg-red-100/10"
+                  : "text-green-500 bg-green-100/10",
+                "flex-none rounded-full p-1",
+              )}
+            >
+              <div className="h-2 w-2 rounded-full bg-current" />
+            </div>
+            <h2 className="min-w-0 text-sm font-semibold leading-6 text-white">
+              <span className="flex gap-x-2">
+                <span className="truncate hidden md:block">{game.team2}</span>
+                <span className="truncate md:hidden">
+                  {game.team2.split(" ").pop()}
+                </span>
+                <span className="text-gray-400">@</span>
+                <span className="whitespace-nowrap hidden md:block">
+                  {game.team1}
+                </span>
+                <span className="whitespace-nowrap md:hidden">
+                  {game.team1.split(" ").pop()}
+                </span>
+                <span className="absolute inset-0" />
+              </span>
+            </h2>
+          </div>
+          <div className="mt-3 flex items-center gap-x-2.5 text-xs leading-5 text-gray-400">
+            <p className="truncate">
               {game.team1Spread > 0
                 ? `${game.team2} ${game.team2Spread}`
                 : `${game.team1} ${game.team1Spread}`}
             </p>
+            <svg
+              viewBox="0 0 2 2"
+              className="h-0.5 w-0.5 flex-none fill-gray-300 hidden sm:block"
+            >
+              <circle cx={1} cy={1} r={1} />
+            </svg>
+            <p className="whitespace-nowrap hidden sm:block">
+              {game.team1Spread > 0 ? "Visiting Favorite" : "Home Favorite"}
+            </p>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-x-4">
-          <div className="hidden sm:flex sm:flex-col sm:items-end">
-            <div className="mt-1 flex items-center gap-x-1.5">
-              <div className="flex-none rounded-full bg-emerald-500/20 p-1">
-                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              </div>
-              <p className="text-xs leading-5 text-gray-500">
-                {formatDate(game.date)}
-              </p>
-            </div>
-          </div>
-          <ChevronRightIcon
-            className="h-5 w-5 flex-none text-gray-400"
-            aria-hidden="true"
-          />
+        <img
+          className="h-12 w-12 flex-none"
+          src={game.team2Url}
+          alt={game.team2}
+        />
+        <img
+          className="h-12 w-12 flex-none"
+          src={game.team1Url}
+          alt={game.team1}
+        />
+        <div
+          className={classNames(
+            gameStarted
+              ? "text-red-400 bg-red-400/10 ring-red-400/20"
+              : "text-indigo-400 bg-indigo-400/10 ring-indigo-400/20",
+            "hidden sm:block rounded-full flex-none py-1 px-2 text-xs font-medium ring-1 ring-inset",
+          )}
+        >
+          {formatLongDate(game.date)}
         </div>
+        <ChevronRightIcon
+          className="h-5 w-5 flex-none text-gray-400"
+          aria-hidden="true"
+        />
       </li>
       <Transition.Root show={open} as={Fragment}>
-        <Dialog
-          as="div"
-          className="relative z-10"
-          initialFocus={cancelButtonRef}
-          onClose={closeModal}
-        >
+        <Dialog as="div" className="relative z-50" onClose={closeModal}>
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"
@@ -212,126 +224,193 @@ const GameSelectModal: React.FC<{
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+            <div className="fixed inset-0 hidden bg-gray-500 bg-opacity-75 transition-opacity md:block" />
           </Transition.Child>
-          <div className="fixed inset-0 z-10 overflow-y-auto">
-            <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+
+          <div className="fixed inset-0 w-screen overflow-y-auto">
+            <div className="flex min-h-full items-stretch justify-center text-center md:items-center md:px-2 lg:px-4">
               <Transition.Child
                 as={Fragment}
                 enter="ease-out duration-300"
-                enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                enterTo="opacity-100 translate-y-0 sm:scale-100"
+                enterFrom="opacity-0 translate-y-4 md:translate-y-0 md:scale-95"
+                enterTo="opacity-100 translate-y-0 md:scale-100"
                 leave="ease-in duration-200"
-                leaveFrom="opacity-100 translate-y-0 sm:scale-100"
-                leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                leaveFrom="opacity-100 translate-y-0 md:scale-100"
+                leaveTo="opacity-0 translate-y-4 md:translate-y-0 md:scale-95"
               >
-                <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-3xl sm:p-6">
-                  <div>
-                    <div className="mx-auto flex h-12 w-12 items-center justify-center">
-                      <LockClosedIcon
-                        className="h-10 w-10 text-gray-700"
-                        aria-hidden="true"
-                      />
-                    </div>
-                    <div className="text-center">
-                      <Dialog.Title
-                        as="h3"
-                        className="text-lg font-bold leading-6 text-gray-900"
-                      >
-                        Make Your Pick
-                      </Dialog.Title>
+                <Dialog.Panel className="flex w-full transform text-left text-base transition md:my-8 md:w-max md:px-4">
+                  <div className="relative flex w-full items-center overflow-hidden bg-white px-4 pb-8 pt-14 shadow-2xl sm:px-6 sm:pt-8 md:p-6 lg:p-8">
+                    <button
+                      type="button"
+                      className="absolute right-4 top-4 text-gray-500 hover:text-gray-500 sm:right-6 sm:top-8 md:right-6 md:top-6 lg:right-8 lg:top-8"
+                      onClick={closeModal}
+                    >
+                      <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+                    </button>
 
-                      {/* Matchup data */}
-                      <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-6">
-                        <li
-                          key="team1"
-                          className={classNames(
-                            team === 1
-                              ? "bg-gray-300"
-                              : "bg-white hover:bg-gray-100",
-                            "col-span-1 divide-y divide-gray-200 rounded-lg cursor-pointer shadow",
-                          )}
-                          onClick={() => setTeam(1)}
-                        >
-                          <div className="flex w-full justify-between space-x-6 p-6">
-                            <div className="flex-1 truncate">
-                              <div className="flex space-x-3">
-                                <h3 className="truncate text-sm font-medium text-gray-900">
-                                  {game.team1}
-                                </h3>
-                                <span
-                                  className={classNames(
-                                    game.team1Spread < game.team2Spread
-                                      ? "bg-green-50 text-green-700 ring-green-600/20"
-                                      : "bg-red-50 text-red-700 ring-red-600/20",
-                                    "inline-flex flex-shrink-0 items-center rounded-full px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset",
-                                  )}
-                                >
-                                  {game.team1Spread > 0 && "+"}
-                                  {game.team1Spread}
-                                </span>
-                              </div>
-                              <p className="mt-1 truncate text-sm text-gray-500 text-left">
-                                {game.team1Price > 0 && "+"}
-                                {game.team1Price}
-                              </p>
+                    <div className="w-full">
+                      <h2 className="text-2xl font-bold text-gray-900 sm:pr-12">
+                        {game.team2.split(" ").pop()} @{" "}
+                        {game.team1.split(" ").pop()}
+                      </h2>
+
+                      <section
+                        aria-labelledby="information-heading"
+                        className="mt-4"
+                      >
+                        <div className="flex items-center">
+                          <p className="font-medium text-gray-500">
+                            Kickoff {formatLongDate(game.date)}
+                          </p>
+                        </div>
+                      </section>
+
+                      <section
+                        aria-labelledby="options-heading"
+                        className="mt-6"
+                      >
+                        <div className="sm:flex sm:justify-between">
+                          {/* Size selector */}
+                          <RadioGroup value={team} onChange={setTeam}>
+                            <RadioGroup.Label className="block text-sm font-medium text-gray-700">
+                              Select Team
+                            </RadioGroup.Label>
+                            <div className="mt-1 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                              {/*{game.sizes.map((size) => (*/}
+                              <RadioGroup.Option
+                                as="div"
+                                value="1"
+                                className={({ active }) =>
+                                  classNames(
+                                    active ? "ring-2 ring-indigo-500" : "",
+                                    "relative block cursor-pointer rounded-lg border border-gray-300 p-4 focus:outline-none",
+                                  )
+                                }
+                              >
+                                {({ active, checked }) => (
+                                  <div className="flex min-w-0 gap-x-4">
+                                    <img
+                                      className="h-12 w-12 flex-shrink-0"
+                                      src={game.team1Url}
+                                      alt={game.team1}
+                                    />
+                                    <div>
+                                      <RadioGroup.Label
+                                        as="p"
+                                        className="text-base font-medium text-gray-900"
+                                      >
+                                        {game.team1}
+                                      </RadioGroup.Label>
+                                      <RadioGroup.Description
+                                        as="p"
+                                        className="mt-1 text-sm text-gray-500"
+                                      >
+                                        <span
+                                          className={classNames(
+                                            game.team1Spread < game.team2Spread
+                                              ? "bg-green-50 text-green-700 ring-green-600/20"
+                                              : "bg-red-50 text-red-700 ring-red-600/20",
+                                            "inline-flex flex-shrink-0 items-center rounded-full px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset",
+                                          )}
+                                        >
+                                          {game.team1Spread > 0 && "+"}
+                                          {game.team1Spread} @ {game.team1Price}
+                                        </span>
+                                      </RadioGroup.Description>
+                                      <div
+                                        className={classNames(
+                                          active ? "border" : "border-2",
+                                          checked
+                                            ? "border-indigo-500"
+                                            : "border-transparent",
+                                          "pointer-events-none absolute -inset-px rounded-lg",
+                                        )}
+                                        aria-hidden="true"
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+                              </RadioGroup.Option>
+                              <RadioGroup.Option
+                                as="div"
+                                value="2"
+                                className={({ active }) =>
+                                  classNames(
+                                    active ? "ring-2 ring-indigo-500" : "",
+                                    "relative block cursor-pointer rounded-lg border border-gray-300 p-4 focus:outline-none",
+                                  )
+                                }
+                              >
+                                {({ active, checked }) => (
+                                  <div className="flex min-w-0 gap-x-4">
+                                    <img
+                                      className="h-12 w-12 flex-shrink-0"
+                                      src={game.team2Url}
+                                      alt={game.team2}
+                                    />
+                                    <div>
+                                      <RadioGroup.Label
+                                        as="p"
+                                        className="text-base font-medium text-gray-900"
+                                      >
+                                        {game.team2}
+                                      </RadioGroup.Label>
+                                      <RadioGroup.Description
+                                        as="p"
+                                        className="mt-1 text-sm text-gray-500"
+                                      >
+                                        <span
+                                          className={classNames(
+                                            game.team1Spread > game.team2Spread
+                                              ? "bg-green-50 text-green-700 ring-green-600/20"
+                                              : "bg-red-50 text-red-700 ring-red-600/20",
+                                            "inline-flex flex-shrink-0 items-center rounded-full px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset",
+                                          )}
+                                        >
+                                          {game.team2Spread > 0 && "+"}
+                                          {game.team2Spread} @ {game.team2Price}
+                                        </span>
+                                      </RadioGroup.Description>
+                                      <div
+                                        className={classNames(
+                                          active ? "border" : "border-2",
+                                          checked
+                                            ? "border-indigo-500"
+                                            : "border-transparent",
+                                          "pointer-events-none absolute -inset-px rounded-lg",
+                                        )}
+                                        aria-hidden="true"
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+                              </RadioGroup.Option>
+                              {/*))}*/}
                             </div>
-                            <img
-                              className="h-12 w-12 flex-shrink-0"
-                              src={game.team1Url}
-                              alt={game.team1}
+                          </RadioGroup>
+                        </div>
+                        <div className="mt-6">
+                          <button
+                            onClick={submitForm}
+                            className="flex w-full items-center justify-center rounded-md border border-transparent bg-indigo-600 px-8 py-3 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50"
+                          >
+                            Add to Betslip
+                          </button>
+                        </div>
+                        <div className="mt-6 text-center">
+                          <span className="group inline-flex text-base font-medium">
+                            <ShieldCheckIcon
+                              className="mr-2 h-6 w-6 flex-shrink-0 text-gray-400"
+                              aria-hidden="true"
                             />
-                          </div>
-                        </li>
-                        <li
-                          key="team2"
-                          className={classNames(
-                            team === 2
-                              ? "bg-gray-300"
-                              : "bg-white hover:bg-gray-100",
-                            "col-span-1 divide-y divide-gray-200 rounded-lg cursor-pointer shadow",
-                          )}
-                          onClick={() => setTeam(2)}
-                        >
-                          <div className="flex w-full justify-between space-x-6 p-6">
-                            <div className="flex-1 truncate">
-                              <div className="flex space-x-3">
-                                <h3 className="truncate text-sm font-medium text-gray-900">
-                                  {game.team2}
-                                </h3>
-                                <span
-                                  className={classNames(
-                                    game.team2Spread < game.team1Spread
-                                      ? "bg-green-50 text-green-700 ring-green-600/20"
-                                      : "bg-red-50 text-red-700 ring-red-600/20",
-                                    "inline-flex flex-shrink-0 items-center rounded-full px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset",
-                                  )}
-                                >
-                                  {game.team2Spread > 0 && "+"}
-                                  {game.team2Spread}
-                                </span>
-                              </div>
-                              <p className="mt-1 truncate text-sm text-gray-500 text-left">
-                                {game.team2Price > 0 && "+"}
-                                {game.team2Price}
-                              </p>
-                            </div>
-                            <img
-                              className="h-12 w-12 flex-shrink-0"
-                              src={game.team2Url}
-                              alt={game.team2}
-                            />
-                          </div>
-                        </li>
-                      </ul>
+                            <span className="text-gray-500">
+                              Odds provided by DraftKings
+                            </span>
+                          </span>
+                        </div>
+                      </section>
                     </div>
                   </div>
-                  <button
-                    onClick={submitForm}
-                    className="inline-flex w-full justify-center rounded-md bg-indigo-600 mt-4 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-                  >
-                    Add to Bet Slip
-                  </button>
                 </Dialog.Panel>
               </Transition.Child>
             </div>
@@ -345,78 +424,67 @@ const GameSelectModal: React.FC<{
 const Cart = ({ cart, removeBet }) => {
   return (
     <Popover className="z-20 ml-4 flow-root text-sm lg:relative lg:ml-8">
-      <Popover.Button className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-        View Betslip
-      </Popover.Button>
-      <Transition
-        as={Fragment}
-        enter="transition ease-out duration-200"
-        enterFrom="opacity-0"
-        enterTo="opacity-100"
-        leave="transition ease-in duration-150"
-        leaveFrom="opacity-100"
-        leaveTo="opacity-0"
-      >
-        <Popover.Panel className="absolute inset-x-0 top-16 mt-px bg-white pb-6 shadow-lg sm:px-2 lg:left-auto lg:right-0 lg:top-full lg:-mr-1.5 lg:mt-3 lg:w-80 lg:rounded-lg lg:ring-1 lg:ring-black lg:ring-opacity-5">
-          <Form
-            method="POST"
-            action="/app/betslip"
-            className="mx-auto max-w-2xl px-4"
+      {({ open }) => (
+        <>
+          <Popover.Button className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+            {open ? "Close Betslip" : "View Betslip"}
+          </Popover.Button>
+          <Transition
+            as={Fragment}
+            enter="transition ease-out duration-200"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="transition ease-in duration-150"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
           >
-            <ul className="divide-y divide-gray-200">
-              {cart.map((team, index) => (
-                <li key={index} className="flex items-center py-6">
-                  <img
-                    src={team.imageSrc}
-                    className="h-16 w-16 flex-none"
-                    alt="team logo"
-                  />
-                  <div className="ml-4 flex-auto">
-                    <h3 className="font-medium text-gray-900">
-                      {team.name} {team.spread > 0 && "+"}
-                      {team.spread}
-                    </h3>
-                  </div>
-                  <div className="ml-auto pl-3">
-                    <div className="-mx-1.5 -my-1.5">
-                      <button
-                        className="inline-flex rounded-md  p-1.5 focus:outline-none focus:ring-2 focus:ring-offset-2 bg-gray-50 text-gray-500 hover:bg-gray-100 focus:ring-gray-600 focus:ring-offset-gray-50"
-                        onClick={() => removeBet(index)}
-                      >
-                        <XMarkIcon className="h-5 w-5" aria-hidden="true" />
-                      </button>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-            <input type="hidden" name="cart" value={JSON.stringify(cart)} />
-            <button
-              type="submit"
-              name="_action"
-              value="accept"
-              className="w-full rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50"
-            >
-              Continue to Unit Placement
-            </button>
-          </Form>
-        </Popover.Panel>
-      </Transition>
+            <Popover.Panel className="absolute inset-x-0 top-16 mt-px bg-gray-900 md:bg-gray-800 pb-6 shadow-lg sm:px-2 lg:left-auto lg:right-0 lg:top-full lg:-mr-1.5 lg:mt-3 lg:w-80 lg:rounded-lg lg:ring-1 lg:ring-black lg:ring-opacity-5">
+              <Form
+                method="POST"
+                action="/app/betslip"
+                className="mx-auto max-w-2xl px-4"
+              >
+                <ul className="divide-y divide-gray-200">
+                  {cart.map((team, index) => (
+                    <li key={index} className="flex items-center py-6">
+                      <img
+                        src={team.imageSrc}
+                        className="h-16 w-16 flex-none"
+                        alt="team logo"
+                      />
+                      <div className="ml-4 flex-auto">
+                        <h3 className="font-medium text-white">
+                          {team.name} {team.spread > 0 && "+"}
+                          {team.spread}
+                        </h3>
+                      </div>
+                      <div className="ml-auto pl-3">
+                        <div className="-mx-1.5 -my-1.5">
+                          <button
+                            className="inline-flex rounded-md  p-1.5 focus:outline-none focus:ring-2 focus:ring-offset-2 bg-gray-800 md:bg-gray-700 text-gray-300 hover:bg-gray-600 focus:ring-gray-600 focus:ring-offset-gray-50"
+                            onClick={() => removeBet(index)}
+                          >
+                            <XMarkIcon className="h-5 w-5" aria-hidden="true" />
+                          </button>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                <input type="hidden" name="cart" value={JSON.stringify(cart)} />
+                <button
+                  type="submit"
+                  name="_action"
+                  value="accept"
+                  className="w-full rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50"
+                >
+                  Continue to Unit Placement
+                </button>
+              </Form>
+            </Popover.Panel>
+          </Transition>
+        </>
+      )}
     </Popover>
   );
-};
-
-const formatDate = (dateObj) => {
-  try {
-    const centralTime = DateTime.fromISO(dateObj, { zone: "UTC" }).setZone(
-      "America/Chicago",
-    );
-    const dayName = centralTime.toFormat("EEEE");
-    const hours = centralTime.toFormat("h");
-    const minutes = centralTime.toFormat("mm");
-    const period = centralTime.toFormat("a");
-    return `${dayName} @ ${hours}:${minutes}${period}`;
-  } catch (e) {
-    return dateObj;
-  }
 };

@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useState } from "react";
 import { Transition } from "@headlessui/react";
+import { DateTime } from "luxon";
 import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
@@ -19,12 +20,17 @@ export const Notification = ({ text, error = false }) => {
     }
   }, [text]);
 
+  const closeNotification = () => {
+    text = null;
+    setShow(false);
+  }
+
   return (
     <>
       {/* Global notification live region, render this permanently at the end of the document */}
       <div
         aria-live="assertive"
-        className="pointer-events-none fixed inset-0 flex items-end px-4 py-6 sm:items-start sm:p-6"
+        className="z-50 pointer-events-none fixed inset-0 flex items-end px-4 py-6 sm:items-start sm:p-6"
       >
         <div className="flex w-full flex-col items-center space-y-4 sm:items-end">
           {/* Notification panel, dynamically insert this into the live region when it needs to be displayed */}
@@ -64,9 +70,7 @@ export const Notification = ({ text, error = false }) => {
                     <button
                       type="button"
                       className="inline-flex rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                      onClick={() => {
-                        setShow(false);
-                      }}
+                      onClick={closeNotification}
                     >
                       <XMarkIcon className="h-5 w-5" />
                     </button>
@@ -102,3 +106,26 @@ export const formatISODate = (isoString) => {
   const formattedMinutes = minutes < 10 ? "0" + minutes : minutes;
   return `${month}/${day} @ ${hours}:${formattedMinutes}${ampm}`;
 };
+
+export const formatLongDate = (dateObj) => {
+  try {
+    const centralTime = DateTime.fromISO(dateObj, { zone: "UTC" }).setZone(
+      "America/Chicago",
+    );
+    const dayName = centralTime.toFormat("EEEE");
+    const hours = centralTime.toFormat("h");
+    const minutes = centralTime.toFormat("mm");
+    const period = centralTime.toFormat("a");
+    return `${dayName} @ ${hours}:${minutes}${period}`;
+  } catch (e) {
+    return dateObj;
+  }
+};
+
+export const checkGameStarted = (date) => {
+  const now = DateTime.now().setZone("America/Chicago");
+  const gameStart = DateTime.fromISO(date, { zone: "UTC" }).setZone(
+    "America/Chicago",
+  );
+  return now > gameStart;
+}
