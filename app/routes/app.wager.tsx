@@ -69,15 +69,17 @@ export default function PlaceWager() {
 
   return (
     <>
-      <Notification
-        text={
-          alertText ||
-          errorText ||
-          (currentBet &&
-            "You have already submitted your slate this week. Making another submission will override your current slate.")
-        }
-        error={!!errorText || !!currentBet}
-      />
+      {slip && slip.length === 0 && (
+        <Notification
+          text={
+            alertText ||
+            errorText ||
+            (currentBet &&
+              "You have already submitted your slate this week. Making another submission will override your current slate.")
+          }
+          error={!!errorText || !!currentBet}
+        />
+      )}
       <main>
         <header className="z-10 flex sticky top-0 bg-gray-900 items-center justify-between border-b border-white/5 px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
           <h1 className="text-base font-semibold leading-7 text-white">

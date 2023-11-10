@@ -21,7 +21,7 @@ export const action = async (args: ActionArgs) => {
     case "submit":
       return submitBetSlip(args);
     default:
-      throw redirect("/wager");
+      return redirect("/app/wager");
   }
 };
 
@@ -29,7 +29,7 @@ const acceptBetSlip = async ({ request }: ActionArgs) => {
   const formData = await request.formData();
   const bets = JSON.parse(formData.get("cart") as string);
   if (!bets || typeof bets !== "object" || bets.length === 0)
-    throw redirect("/wager");
+    throw redirect("/app/wager");
   return bets;
 };
 
@@ -43,7 +43,7 @@ const submitBetSlip = async ({ request }: ActionArgs) => {
   for (const bet of bets) {
     if (!bet.units || bet.units <= 0)
       return json(
-        { errors: { units: "Each leg must have a unit size greater than 0." } },
+        { error: "You must wager more than 0 on each leg." },
         { status: 400 },
       );
     totalUnits += parseFloat(bet.units);
@@ -51,9 +51,7 @@ const submitBetSlip = async ({ request }: ActionArgs) => {
   if (totalUnits > 5)
     return json(
       {
-        errors: {
-          units: `You may wager no more than 5 units. You have wagered ${totalUnits}.`,
-        },
+        error: `You may wager no more than 5 units. You have wagered ${totalUnits}.`,
       },
       { status: 400 },
     );
@@ -68,9 +66,17 @@ const submitBetSlip = async ({ request }: ActionArgs) => {
     };
   });
 
-  const { week: returnedWeek } = await createBet({ userId, week, betSlip });
-  return redirect(
-    `/app/me/${returnedWeek}?alert=You have successfully placed your bet!`,
+  const result = await createBet({ userId, week, betSlip });
+  if (result)
+    return redirect(
+      `/app/me/${result.week}?alert=You have successfully placed your bet!`,
+    );
+  return json(
+    {
+      error:
+        "Game(s) in your existing betslip have already started. Please try again next week.",
+    },
+    { status: 400 },
   );
 };
 
@@ -121,7 +127,7 @@ export default function SubmitBetslip() {
         </div>
       </header>
       <main className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-        <Notification error text={actionData?.errors?.units} />
+        <Notification error text={actionData?.error} />
         <div className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
           {/* Page-specific content below */}
           <Betslip
