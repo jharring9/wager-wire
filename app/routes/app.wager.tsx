@@ -109,11 +109,11 @@ export default function PlaceWager() {
 
 const GameSelectionModal = ({ game, allowed, addGameToSlip }) => {
   const [open, setOpen] = useState(false);
-  const [team, setTeam] = useState("0");
+  const [team, setTeam] = useState(0);
 
   const closeModal = () => {
     setOpen(false);
-    setTeam("");
+    setTeam(0);
   };
 
   const openModal = () => {
@@ -122,13 +122,13 @@ const GameSelectionModal = ({ game, allowed, addGameToSlip }) => {
 
   const submitForm = () => {
     closeModal();
-    if (team !== "1" && team !== "2") return;
+    if (team !== 1 && team !== 2) return;
     addGameToSlip({
       gameId: game.id,
       teamId: team,
-      name: team === "1" ? game.team1 : game.team2,
-      spread: team === "1" ? game.team1Spread : game.team2Spread,
-      imageSrc: team === "1" ? game.team1Url : game.team2Url,
+      name: team === 1 ? game.team1 : game.team2,
+      spread: team === 1 ? game.team1Spread : game.team2Spread,
+      imageSrc: team === 1 ? game.team1Url : game.team2Url,
       units: 0,
     });
   };
@@ -256,10 +256,7 @@ const GameSelectionModal = ({ game, allowed, addGameToSlip }) => {
                         {game.team1.split(" ").pop()}
                       </h2>
 
-                      <section
-                        aria-labelledby="information-heading"
-                        className="mt-4"
-                      >
+                      <section className="mt-4">
                         <div className="flex items-center">
                           <p className="font-medium text-gray-500">
                             Kickoff {formatLongDate(game.date)}
@@ -278,10 +275,9 @@ const GameSelectionModal = ({ game, allowed, addGameToSlip }) => {
                               Select Team
                             </RadioGroup.Label>
                             <div className="mt-1 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                              {/*{game.sizes.map((size) => (*/}
                               <RadioGroup.Option
                                 as="div"
-                                value="1"
+                                value={1}
                                 className={({ active }) =>
                                   classNames(
                                     active ? "ring-2 ring-indigo-500" : "",
@@ -335,7 +331,7 @@ const GameSelectionModal = ({ game, allowed, addGameToSlip }) => {
                               </RadioGroup.Option>
                               <RadioGroup.Option
                                 as="div"
-                                value="2"
+                                value={2}
                                 className={({ active }) =>
                                   classNames(
                                     active ? "ring-2 ring-indigo-500" : "",
@@ -387,7 +383,6 @@ const GameSelectionModal = ({ game, allowed, addGameToSlip }) => {
                                   </div>
                                 )}
                               </RadioGroup.Option>
-                              {/*))}*/}
                             </div>
                           </RadioGroup>
                         </div>

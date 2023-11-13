@@ -8,7 +8,7 @@ import { requireUserId } from "~/session.server";
 import { Notification } from "~/shared";
 
 export const meta: V2_MetaFunction = () => [
-  { title: "WagerWire - Your Betslip" },
+  { title: "Your Betslip - WagerWire" },
 ];
 
 export const action = async (args: ActionArgs) => {

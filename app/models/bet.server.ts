@@ -216,32 +216,6 @@ export async function getUserBets({
 }
 
 /**
- * Get the User's bet for the current week.
- * @param userId The User's ID.
- */
-export async function getUserCurrentBet({
-  userId,
-}: Pick<Bet, "userId">): Promise<Bet | null> {
-  const db = await arc.tables();
-
-  const result = await db.bet.get({
-    pk: userId,
-    sk: getNFLWeek().toString(),
-  });
-
-  if (result) {
-    return {
-      userId: result.pk,
-      week: result.sk,
-      betSlip: result.betSlip,
-      scoringComplete: result.scoringComplete,
-      date: result.date,
-    };
-  }
-  return null;
-}
-
-/**
  * Get all bets for the current week, placed by all Users.
  */
 export async function getBetsForCurrentWeek(): Promise<Array<BetWithUserName>> {
@@ -284,8 +258,22 @@ export async function createBet({
   userId,
   week,
   betSlip,
-}: Pick<Bet, "userId" | "week" | "betSlip">): Promise<Bet> {
+}: Pick<Bet, "userId" | "week" | "betSlip">): Promise<Bet | null> {
   const db = await arc.tables();
+
+  // Check for current bet -- if exists, confirm no games have begun
+  const bets = await getBetWithData({ userId, week });
+  if (bets) {
+    const now = DateTime.utc().setZone("America/Chicago");
+    const gamesInProgress = bets.betSlip.filter((game) => {
+      const gameDate = DateTime.fromISO(game.date).setZone("America/Chicago");
+      return gameDate < now;
+    });
+
+    if (gamesInProgress.length > 0) {
+      return null;
+    }
+  }
 
   const result = await db.bet.put({
     pk: userId,
