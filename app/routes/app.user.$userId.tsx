@@ -203,7 +203,7 @@ export default function UserBetsPage() {
                   <td className="py-4 pl-0 pr-4 text-sm leading-6 sm:pr-8 lg:pr-20">
                     <div className="flex items-center justify-end gap-x-2 sm:justify-start">
                       <span className="text-gray-400 sm:hidden">
-                        {bet.profit && bet.profit > 0 && "+"}
+                        {bet.profit !== undefined && bet.profit > 0 && "+"}
                         {bet.profit || 0} units
                       </span>
                       <div
@@ -222,7 +222,7 @@ export default function UserBetsPage() {
                     </div>
                   </td>
                   <td className="hidden py-4 pl-0 pr-8 text-sm leading-6 text-gray-400 md:table-cell lg:pr-20">
-                    {bet.profit && bet.profit > 0 && "+"}
+                    {bet.profit !== undefined && bet.profit > 0 && "+"}
                     {bet.profit || 0} units
                   </td>
                   <td className="hidden py-4 pl-0 pr-4 text-right text-sm leading-6 text-gray-400 sm:table-cell sm:pr-6 lg:pr-8">
