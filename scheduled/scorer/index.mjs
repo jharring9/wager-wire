@@ -34,9 +34,9 @@ async function scoreBetsForWeek(week) {
 
       if (gameDetails && gameDetails.winner !== 0) {
         if (gameDetails.winner === betSlipItem.teamId) {
-          totalProfit += parseInt(betSlipItem.units);
+          totalProfit += parseFloat(betSlipItem.units);
         } else {
-          totalProfit -= parseInt(betSlipItem.units);
+          totalProfit -= parseFloat(betSlipItem.units);
         }
       }
     }

@@ -1,10 +1,8 @@
 # Wager Wire
 
 ### To do
-- Update wager flow UI
+- Update betslip UI
 - Fix week 5 game dates in DB
-- replace all alerts with notifications
 - randomly generated IDs for user IDs
-- games lock at individual times
 - Logo/favicon
-- Leagues
+- Leagues -- replace Season standings with leagues below (each league has its own standings), user "PUBLIC" is now just league ID
