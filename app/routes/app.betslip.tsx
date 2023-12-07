@@ -48,10 +48,10 @@ const submitBetSlip = async ({ request }: ActionArgs) => {
       );
     totalUnits += parseFloat(bet.units);
   }
-  if (totalUnits > 5)
+  if (totalUnits > 10)
     return json(
       {
-        error: `You may wager no more than 5 units. You have wagered ${totalUnits}.`,
+        error: `You may wager no more than 10 units. You have wagered ${totalUnits}.`,
       },
       { status: 400 },
     );
