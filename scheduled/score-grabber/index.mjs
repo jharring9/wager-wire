@@ -41,7 +41,7 @@ async function updateWinnerBasedOnScores() {
     const actualDifference = awayScore - homeScore;
     const spreadDifference = game.team1Spread;
 
-    let winner;
+    let winner = 0;
     if (actualDifference - spreadDifference < 0) {
       console.log(
         `${gameScore.home_team} wins ATS with score ${homeScore} - ${awayScore}. Actual difference was ${actualDifference} and spread difference was ${spreadDifference}`,
@@ -56,7 +56,6 @@ async function updateWinnerBasedOnScores() {
       console.log(
         `${gameScore.home_team}-${gameScore.away_team} pushes with score ${homeScore} - ${awayScore}`,
       );
-      continue;
     }
 
     await db.game.put({ ...game, winner });
