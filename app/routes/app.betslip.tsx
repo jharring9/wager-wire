@@ -40,18 +40,29 @@ const submitBetSlip = async ({ request }: ActionArgs) => {
     throw redirect("/app/wager");
 
   let totalUnits = 0;
+  let fantasyUnits = 0;
   for (const bet of bets) {
     if (!bet.units || bet.units <= 0)
       return json(
         { error: "You must wager more than 0 on each leg." },
         { status: 400 },
       );
+    if (bet.gameId && bet.gameId.includes("fantasy")) {
+      fantasyUnits += parseFloat(bet.units);
+    }
     totalUnits += parseFloat(bet.units);
   }
-  if (totalUnits > 5)
+  if (totalUnits > 10)
     return json(
       {
-        error: `You may wager no more than 5 units. You have wagered ${totalUnits}.`,
+        error: `You may wager no more than 10 units. You have wagered ${totalUnits}.`,
+      },
+      { status: 400 },
+    );
+  if (fantasyUnits > 5)
+    return json(
+      {
+        error: `You may wager no more than 5 units on fantasy games. You have wagered ${fantasyUnits}.`,
       },
       { status: 400 },
     );
