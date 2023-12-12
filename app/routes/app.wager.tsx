@@ -108,6 +108,9 @@ export default function PlaceWager() {
 }
 
 const GameSelectionModal = ({ game, allowed, addGameToSlip }) => {
+  const isFantasy =
+    game.id && typeof game.id === "string" && game.id.includes("fantasy");
+
   const [open, setOpen] = useState(false);
   const [team, setTeam] = useState(0);
 
@@ -191,12 +194,12 @@ const GameSelectionModal = ({ game, allowed, addGameToSlip }) => {
           </div>
         </div>
         <img
-          className="h-12 w-12 flex-none"
+          className="h-12 w-12 flex-none rounded-lg"
           src={game.team2Url}
           alt={game.team2}
         />
         <img
-          className="h-12 w-12 flex-none"
+          className="h-12 w-12 flex-none rounded-lg"
           src={game.team1Url}
           alt={game.team1}
         />
@@ -208,7 +211,7 @@ const GameSelectionModal = ({ game, allowed, addGameToSlip }) => {
             "hidden sm:block rounded-full flex-none py-1 px-2 text-xs font-medium ring-1 ring-inset",
           )}
         >
-          {formatLongDate(game.date)}
+          {isFantasy ? "Fantasy Playoffs" : formatLongDate(game.date)}
         </div>
         <ChevronRightIcon
           className="h-5 w-5 flex-none text-gray-400"
@@ -259,7 +262,7 @@ const GameSelectionModal = ({ game, allowed, addGameToSlip }) => {
                       <section className="mt-4">
                         <div className="flex items-center">
                           <p className="font-medium text-gray-500">
-                            Kickoff {formatLongDate(game.date)}
+                            {isFantasy ? "Fantasy Playoffs" : `Kickoff ${formatLongDate(game.date)}`}
                           </p>
                         </div>
                       </section>
@@ -288,7 +291,7 @@ const GameSelectionModal = ({ game, allowed, addGameToSlip }) => {
                                 {({ active, checked }) => (
                                   <div className="flex min-w-0 gap-x-4">
                                     <img
-                                      className="h-12 w-12 flex-shrink-0"
+                                      className="h-12 w-12 flex-shrink-0 rounded-lg"
                                       src={game.team1Url}
                                       alt={game.team1}
                                     />
@@ -342,7 +345,7 @@ const GameSelectionModal = ({ game, allowed, addGameToSlip }) => {
                                 {({ active, checked }) => (
                                   <div className="flex min-w-0 gap-x-4">
                                     <img
-                                      className="h-12 w-12 flex-shrink-0"
+                                      className="h-12 w-12 flex-shrink-0 rounded-lg"
                                       src={game.team2Url}
                                       alt={game.team2}
                                     />
@@ -446,7 +449,7 @@ const Cart = ({ cart, removeBet }) => {
                     <li key={index} className="flex items-center py-6">
                       <img
                         src={team.imageSrc}
-                        className="h-16 w-16 flex-none"
+                        className="h-16 w-16 flex-none rounded-lg"
                         alt="team logo"
                       />
                       <div className="ml-4 flex-auto">

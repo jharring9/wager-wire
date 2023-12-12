@@ -182,7 +182,7 @@ export default function DisplayUserBet() {
                 <td className="py-4 pl-4 pr-4 sm:pr-8 sm:pl-6 lg:pl-8">
                   <div className="flex items-center min-w-0 gap-x-4">
                     <img
-                      className="h-12 w-12 flex-none"
+                      className="h-12 w-12 flex-none rounded-lg"
                       src={bet.teamUrl}
                       alt={bet.teamName}
                     />

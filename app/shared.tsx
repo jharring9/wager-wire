@@ -23,7 +23,7 @@ export const Notification = ({ text, error = false }) => {
   const closeNotification = () => {
     text = null;
     setShow(false);
-  }
+  };
 
   return (
     <>
@@ -114,9 +114,8 @@ export const formatLongDate = (dateObj) => {
     );
     const dayName = centralTime.toFormat("EEEE");
     const hours = centralTime.toFormat("h");
-    const minutes = centralTime.toFormat("mm");
     const period = centralTime.toFormat("a");
-    return `${dayName} @ ${hours}:${minutes}${period}`;
+    return `${dayName} @ ${hours}${period}`;
   } catch (e) {
     return dateObj;
   }
@@ -128,4 +127,4 @@ export const checkGameStarted = (date) => {
     "America/Chicago",
   );
   return now > gameStart;
-}
+};
