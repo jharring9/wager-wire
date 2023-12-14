@@ -1,10 +1,12 @@
 import { useMatches } from "@remix-run/react";
 import { useMemo } from "react";
+import { DateTime } from "luxon";
 
 import type { User } from "~/models/user.server";
 
 const DEFAULT_REDIRECT = "/";
-const NFL_SEASON_START = new Date("2023-09-05");
+const NFL_SEASON_START = "2023-09-05";
+const NFL_TIMEZONE = "America/New_York";
 
 /**
  * This should be used any time the redirect path is user-provided
@@ -71,17 +73,23 @@ export function validateEmail(email: unknown): email is string {
   return typeof email === "string" && email.length > 3 && email.includes("@");
 }
 
-export function getNFLWeek(today: Date = new Date()) {
-  const daysSinceStart =
-    (today.valueOf() - NFL_SEASON_START.valueOf()) / 1000 / 60 / 60 / 24;
-  return Math.floor(daysSinceStart / 7) + 1;
+export function getNFLWeek(today = new Date()) {
+  const todayInNFLTimeZone = DateTime.fromJSDate(today).setZone(NFL_TIMEZONE);
+  const nflStartInTimeZone = DateTime.fromISO(NFL_SEASON_START, {
+    zone: NFL_TIMEZONE,
+  });
+  const daysSinceStart = todayInNFLTimeZone.diff(
+    nflStartInTimeZone,
+    "days",
+  ).days;
+  return Math.ceil((daysSinceStart + 1) / 7);
 }
 
 export function getWeekDays(nflWeek: string): string {
-  const weekStartDate = new Date(NFL_SEASON_START.getTime());
-  weekStartDate.setDate(
-    NFL_SEASON_START.getDate() + (parseInt(nflWeek) - 1) * 7 + 1,
-  );
+  const nflStart = new Date(NFL_SEASON_START);
+
+  const weekStartDate = new Date(nflStart.getTime());
+  weekStartDate.setDate(nflStart.getDate() + (parseInt(nflWeek) - 1) * 7 + 1);
 
   const weekEndDate = new Date(weekStartDate.getTime());
   weekEndDate.setDate(weekStartDate.getDate() + 6);

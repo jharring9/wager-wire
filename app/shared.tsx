@@ -107,15 +107,16 @@ export const formatISODate = (isoString) => {
   return `${month}/${day} @ ${hours}:${formattedMinutes}${ampm}`;
 };
 
-export const formatLongDate = (dateObj) => {
+export const formatGameDate = (dateObj) => {
   try {
-    const centralTime = DateTime.fromISO(dateObj, { zone: "UTC" }).setZone(
-      "America/Chicago",
-    );
-    const dayName = centralTime.toFormat("EEEE");
-    const hours = centralTime.toFormat("h");
-    const period = centralTime.toFormat("a");
-    return `${dayName} @ ${hours}${period}`;
+    const localTime = DateTime.fromISO(dateObj).toLocal();
+    const dayName = localTime.toFormat("EEEE");
+    const hours = localTime.toFormat("h");
+    const minutes = (5 * Math.round(localTime.minute / 5))
+      .toString()
+      .padStart(2, "0");
+    const period = localTime.toFormat("a");
+    return `${dayName} @ ${hours}:${minutes}${period}`;
   } catch (e) {
     return dateObj;
   }

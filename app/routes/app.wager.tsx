@@ -12,7 +12,7 @@ import { getNFLWeek } from "~/utils";
 import {
   classNames,
   Notification,
-  formatLongDate,
+  formatGameDate,
   checkGameStarted,
 } from "~/shared";
 
@@ -211,7 +211,7 @@ const GameSelectionModal = ({ game, allowed, addGameToSlip }) => {
             "hidden sm:block rounded-full flex-none py-1 px-2 text-xs font-medium ring-1 ring-inset",
           )}
         >
-          {isFantasy ? "Fantasy Playoffs" : formatLongDate(game.date)}
+          {isFantasy ? "Fantasy Playoffs" : formatGameDate(game.date)}
         </div>
         <ChevronRightIcon
           className="h-5 w-5 flex-none text-gray-400"
@@ -262,7 +262,7 @@ const GameSelectionModal = ({ game, allowed, addGameToSlip }) => {
                       <section className="mt-4">
                         <div className="flex items-center">
                           <p className="font-medium text-gray-500">
-                            {isFantasy ? "Fantasy Playoffs" : `Kickoff ${formatLongDate(game.date)}`}
+                            {isFantasy ? "Fantasy Playoffs" : `Kickoff ${formatGameDate(game.date)}`}
                           </p>
                         </div>
                       </section>

@@ -7,8 +7,8 @@ import { Link, useLoaderData, useSearchParams } from "@remix-run/react";
 import {
   classNames,
   Notification,
-  formatISODate,
   formatShortDate,
+  formatGameDate,
 } from "~/shared";
 
 export const meta: V2_MetaFunction = () => [{ title: "View Bet - WagerWire" }];
@@ -218,7 +218,7 @@ export default function DisplayUserBet() {
                   {bet.units} units
                 </td>
                 <td className="hidden py-4 pl-0 pr-4 text-right text-sm leading-6 text-gray-400 sm:table-cell sm:pr-6 lg:pr-8">
-                  {formatISODate(bet.date)}
+                  {formatGameDate(bet.date)}
                 </td>
               </tr>
             ))}

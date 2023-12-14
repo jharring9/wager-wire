@@ -2,7 +2,6 @@ import arc from "@architect/functions";
 import type { User } from "~/models/user.server";
 import type { Game } from "~/models/game.server";
 import { getUserById } from "~/models/user.server";
-import { getNFLWeek } from "~/utils";
 import { DateTime } from "luxon";
 
 /**
@@ -218,16 +217,14 @@ export async function getUserBets({
 /**
  * Get all bets for the current week, placed by all Users.
  */
-export async function getBetsForCurrentWeek(): Promise<Array<BetWithUserName>> {
+export async function getBetsForCurrentWeek(week: string): Promise<Array<BetWithUserName>> {
   const db = await arc.tables();
-
-  const currentWeek = `${getNFLWeek()}`;
 
   const betsResult = await db.bet.query({
     IndexName: "byWeek",
     KeyConditionExpression: "sk = :weekValue",
     ExpressionAttributeValues: {
-      ":weekValue": currentWeek,
+      ":weekValue": week,
     },
     ProjectionExpression: "pk, sk, scoringComplete", // Update if more data is desired
   });
@@ -261,19 +258,8 @@ export async function createBet({
 }: Pick<Bet, "userId" | "week" | "betSlip">): Promise<Bet | null> {
   const db = await arc.tables();
 
-  // Check for current bet -- if exists, confirm no games have begun
-  const bets = await getBetWithData({ userId, week });
-  if (bets) {
-    const now = DateTime.utc().setZone("America/Chicago");
-    const gamesInProgress = bets.betSlip.filter((game) => {
-      const gameDate = DateTime.fromISO(game.date).setZone("America/Chicago");
-      return gameDate < now;
-    });
-
-    if (gamesInProgress.length > 0) {
-      return null;
-    }
-  }
+  const betActive = await isBetActive({ userId, week });
+  if (betActive) return null;
 
   const result = await db.bet.put({
     pk: userId,
@@ -290,4 +276,20 @@ export async function createBet({
     scoringComplete: result.scoringComplete,
     date: result.date,
   };
+}
+
+export async function isBetActive({
+  userId,
+  week,
+}: Pick<Bet, "userId" | "week">): Promise<boolean> {
+  const bets = await getBetWithData({ userId, week });
+  if (!bets) return false;
+
+  const now = DateTime.utc().setZone("America/Chicago");
+  const gamesInProgress = bets.betSlip.filter((game) => {
+    const gameDate = DateTime.fromISO(game.date).setZone("America/Chicago");
+    return gameDate < now;
+  });
+
+  return gamesInProgress.length > 0;
 }
