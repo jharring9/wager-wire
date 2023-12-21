@@ -1,7 +1,7 @@
 import arc from "@architect/functions";
 import type { User } from "~/models/user.server";
-import type { Game } from "~/models/game.server";
 import { getUserById } from "~/models/user.server";
+import type { Game } from "~/models/game.server";
 import { DateTime } from "luxon";
 
 /**
@@ -283,13 +283,11 @@ export async function isBetActive({
   week,
 }: Pick<Bet, "userId" | "week">): Promise<boolean> {
   const bets = await getBetWithData({ userId, week });
-  if (!bets) return false;
+  if (!bets || !bets.betSlip) return false;
 
   const now = DateTime.utc().setZone("America/Chicago");
-  const gamesInProgress = bets.betSlip.filter((game) => {
+  return bets.betSlip.some((game) => {
     const gameDate = DateTime.fromISO(game.date).setZone("America/Chicago");
     return gameDate < now;
   });
-
-  return gamesInProgress.length > 0;
 }
